@@ -868,32 +868,47 @@
         }
 
         async function copyTextToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
+            let copied = false;
+
+            // 1. Try modern clipboard API if in secure context
+            if (navigator.clipboard && window.isSecureContext) {
                 try {
                     await navigator.clipboard.writeText(text);
-                    return true;
+                    copied = true;
                 } catch (e) {
-                    console.warn("navigator.clipboard failed", e);
+                    console.warn("navigator.clipboard failed, using universal mobile fallback", e);
                 }
             }
 
-            // Fallback for older webviews / insecure contexts
+            if (copied) return true;
+
+            // 2. Universal Mobile & Desktop fallback (works on iOS Safari, Android Chrome, and HTTP local IPs)
             const textArea = document.createElement("textarea");
             textArea.value = text;
             textArea.style.position = "fixed";
-            textArea.style.left = "-999999px";
-            textArea.style.top = "-999999px";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.width = "2em";
+            textArea.style.height = "2em";
+            textArea.style.padding = "0";
+            textArea.style.border = "none";
+            textArea.style.outline = "none";
+            textArea.style.boxShadow = "none";
+            textArea.style.background = "transparent";
+            textArea.setAttribute("readonly", "");
             document.body.appendChild(textArea);
+
             textArea.focus();
             textArea.select();
-            let ok = false;
+            textArea.setSelectionRange(0, 999999);
+
             try {
-                ok = document.execCommand('copy');
+                copied = document.execCommand('copy');
             } catch (err) {
                 console.error("Fallback copy failed", err);
             }
             document.body.removeChild(textArea);
-            return ok;
+            return copied;
         }
 
         async function manualCopyOnly() {
@@ -910,9 +925,9 @@
                 return;
             }
 
-            // 1. Silent automatic clipboard copy
+            // 1. Silent automatic clipboard copy (synchronously on user gesture)
             await copyTextToClipboard(reviewText);
-            showToast("Copied to clipboard! Opening Google...");
+            showToast("Copied! Opening Google Reviews...");
 
             // 2. Track click asynchronously
             if (currentReviewId) {
@@ -929,12 +944,16 @@
                 }
             }
 
-            // 3. Open Google review page directly
-            setTimeout(() => {
-                window.open(googleReviewUrl, '_blank');
-                goToStep('thankYou');
-                burstConfetti();
-            }, 600);
+            // 3. Open Google review page IMMEDIATELY (no setTimeout to prevent mobile browser popup blocker)
+            const popup = window.open(googleReviewUrl, '_blank');
+            if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                // If popup was blocked on mobile, navigate directly in same tab
+                window.location.href = googleReviewUrl;
+                return;
+            }
+
+            goToStep('thankYou');
+            burstConfetti();
         }
 
         async function shareOnWhatsApp() {
