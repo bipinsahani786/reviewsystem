@@ -54,7 +54,7 @@
                             @if($business->logo_url)
                                 <img src="{{ $business->logo_url }}" alt="{{ $business->name }}" 
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                     class="w-12 h-12 rounded-xl object-contain border border-slate-100 shadow-xs mb-1.5">
+                                     class="max-h-16 max-w-[200px] w-auto h-auto object-contain mb-2 drop-shadow-2xs">
                                 <div class="w-12 h-12 rounded-xl items-center justify-center font-black text-white shadow-xs text-xl mb-1.5" 
                                      style="display:none; background-color: {{ $business->theme_color ?: '#2563eb' }};">
                                     {{ strtoupper(substr($business->name, 0, 1)) }}
