@@ -871,85 +871,145 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        async function copyTextToClipboard(text) {
-            // Method 1: Modern Clipboard API (works on HTTPS)
+        // CRITICAL: This MUST be called SYNCHRONOUSLY inside a click handler.
+        // Never call this after an await or setTimeout — mobile browsers lose the user gesture context.
+        function copyTextSync(text) {
+            // Method 1: Modern Clipboard API (HTTPS only, but handles async internally)
+            // We fire this as a best-effort side-channel — it may succeed on HTTPS
             if (navigator.clipboard && window.isSecureContext) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    return true;
-                } catch (e) {
-                    console.warn("navigator.clipboard failed", e);
-                }
+                navigator.clipboard.writeText(text).catch(() => {});
             }
 
-            // Method 2: execCommand fallback (works on desktop HTTP, sometimes mobile)
+            // Method 2: Synchronous execCommand — MUST run within user gesture
             try {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.cssText = "position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;opacity:0;";
-                // Do NOT set readonly — execCommand needs editable element on mobile
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                textArea.setSelectionRange(0, 99999);
-                const success = document.execCommand('copy');
-                document.body.removeChild(textArea);
-                if (success) return true;
-            } catch (err) {
-                console.warn("execCommand copy failed", err);
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, 99999);
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (e) {
+                return false;
             }
-
-            return false;
         }
 
-        function showMobileCopyModal(text, onProceed) {
-            // Remove existing modal if any
-            const existingModal = document.getElementById('mobileCopyModal');
-            if (existingModal) existingModal.remove();
+        function showCopyAndGoModal(text, googleUrl) {
+            const existing = document.getElementById('copyGoModal');
+            if (existing) existing.remove();
 
             const modal = document.createElement('div');
-            modal.id = 'mobileCopyModal';
-            modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+            modal.id = 'copyGoModal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,13,26,0.85);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding:0;';
+
             modal.innerHTML = `
-                <div style="background:#fff;border-radius:24px;padding:20px;width:100%;max-width:400px;box-shadow:0 -10px 40px rgba(0,0,0,0.3);">
-                    <div style="text-align:center;margin-bottom:12px;">
-                        <div style="font-size:32px;margin-bottom:8px;">📋</div>
-                        <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0 0 4px;">Review Text Copy Karein</h3>
-                        <p style="font-size:12px;color:#64748b;margin:0;">Neeche text box me tap karein, phir "Select All" → "Copy" karein</p>
-                    </div>
-                    <textarea id="mobileCopyTextarea" rows="4" style="width:100%;border:2px solid #2563eb;border-radius:12px;padding:12px;font-size:13px;color:#1e293b;background:#f8faff;resize:none;box-sizing:border-box;font-family:inherit;line-height:1.5;">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                    <p style="font-size:11px;color:#94a3b8;text-align:center;margin:8px 0;">(Text ko hold karke Select All → Copy karein)</p>
-                    <div style="display:flex;gap:10px;margin-top:12px;">
-                        <button onclick="document.getElementById('mobileCopyModal').remove();" style="flex:1;padding:14px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;">Cancel</button>
-                        <button id="modalProceedBtn" style="flex:2;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">Google Par Post Karein ➔</button>
-                    </div>
+              <div style="background:#fff;border-radius:28px 28px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;box-shadow:0 -20px 60px rgba(0,0,0,0.4);">
+                <div style="width:40px;height:4px;background:#e2e8f0;border-radius:9999px;margin:0 auto 20px;"></div>
+
+                <div style="text-align:center;margin-bottom:16px;">
+                  <div style="font-size:36px;margin-bottom:6px;">📋</div>
+                  <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 4px 0;letter-spacing:-0.3px;">Review Copy Karein</h3>
+                  <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;">Neeche box me <strong>tap &amp; hold</strong> karein → <strong>Select All</strong> → <strong>Copy</strong> — phir Google me paste karein</p>
                 </div>
+
+                <textarea id="modalReviewText" rows="5"
+                  style="width:100%;border:2.5px solid #2563eb;border-radius:14px;padding:14px;font-size:14px;color:#1e293b;background:#f0f6ff;resize:none;box-sizing:border-box;font-family:inherit;line-height:1.6;font-weight:600;"
+                  onclick="this.select();this.setSelectionRange(0,99999);try{document.execCommand('copy')}catch(e){}">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+
+                <div style="display:flex;align-items:center;gap:8px;margin-top:8px;margin-bottom:16px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;">
+                  <span style="font-size:18px;">💡</span>
+                  <span style="font-size:12px;color:#92400e;font-weight:700;line-height:1.4;">Box me tap karo &rarr; Select All &rarr; Copy — phir Google me paste karein</span>
+                </div>
+
+                <button id="modalGoBtn"
+                  style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,#1d4ed8,#4338ca);color:#fff;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:-0.2px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="rgba(255,255,255,0.8)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="rgba(255,255,255,0.6)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="rgba(255,255,255,0.9)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                  Google Review Page Kholein
+                </button>
+
+                <button onclick="document.getElementById('copyGoModal').remove();"
+                  style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:2px solid #e2e8f0;background:transparent;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;">Cancel</button>
+              </div>
             `;
+
             document.body.appendChild(modal);
 
-            // Auto-select all text in textarea after a tick
+            // Auto-select text in modal textarea (synchronous — within this user gesture chain)
             setTimeout(() => {
-                const ta = document.getElementById('mobileCopyTextarea');
+                const ta = document.getElementById('modalReviewText');
                 if (ta) {
                     ta.focus();
                     ta.select();
                     ta.setSelectionRange(0, 99999);
-                    // Try execCommand from this explicit user-visible element
                     try { document.execCommand('copy'); } catch(e) {}
                 }
-            }, 100);
+            }, 80);
 
-            document.getElementById('modalProceedBtn').addEventListener('click', () => {
-                modal.remove();
-                if (onProceed) onProceed();
+            document.getElementById('modalGoBtn').addEventListener('click', function() {
+                // Sync copy one more time on this button click (fresh user gesture)
+                const ta = document.getElementById('modalReviewText');
+                if (ta) {
+                    ta.focus();
+                    ta.select();
+                    ta.setSelectionRange(0, 99999);
+                    try { document.execCommand('copy'); } catch(e) {}
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(ta.value).catch(() => {});
+                    }
+                }
+                document.getElementById('copyGoModal').remove();
+                trackClick();
+                window.location.href = googleUrl; // Same tab — most reliable on mobile
+                setTimeout(() => { goToStep('thankYou'); burstConfetti(); }, 800);
             });
         }
 
-        async function manualCopyOnly() {
+        async function trackClick() {
+            if (currentReviewId) {
+                try {
+                    fetch(`/r/${businessSlug}/click/${currentReviewId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+                    });
+                } catch (e) {}
+            }
+        }
+
+        async function postToGoogle() {
+            const reviewText = document.getElementById('reviewTextarea').value.trim();
+            if (!reviewText) {
+                showToast('Review text is empty!');
+                return;
+            }
+
+            // STEP 1: Synchronous copy — MUST be the FIRST thing inside click handler
+            // (before any await, fetch, or setTimeout — preserves user gesture)
+            const copied = copyTextSync(reviewText);
+
+            if (isMobileDevice()) {
+                // On mobile: show bottom sheet with text pre-selected for manual copy
+                showCopyAndGoModal(reviewText, googleReviewUrl);
+            } else {
+                // Desktop: silent copy + open in new tab
+                showToast(copied ? 'Copied! Opening Google Reviews...' : 'Opening Google Reviews...');
+                trackClick();
+                const popup = window.open(googleReviewUrl, '_blank');
+                if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                    window.location.href = googleReviewUrl;
+                }
+                goToStep('thankYou');
+                burstConfetti();
+            }
+        }
+
+        function manualCopyOnly() {
             const reviewText = document.getElementById('reviewTextarea').value.trim();
             if (!reviewText) return;
-            await copyTextToClipboard(reviewText);
-            showToast("Review text copied! 📋");
+            const ok = copyTextSync(reviewText);
+            showToast(ok ? 'Review text copied! 📋' : 'Text select karke copy karein 📋');
         }
 
         async function trackClick() {
@@ -978,42 +1038,11 @@
             burstConfetti();
         }
 
-        async function postToGoogle() {
+
+        function shareOnWhatsApp() {
             const reviewText = document.getElementById('reviewTextarea').value.trim();
-            if (!reviewText) {
-                showToast("Review text is empty!");
-                return;
-            }
-
-            if (isMobileDevice()) {
-                // On mobile: show modal with text pre-selected so user can copy via long-press
-                // Also try clipboard API in background (works if HTTPS)
-                copyTextToClipboard(reviewText); // best-effort
-                showMobileCopyModal(reviewText, () => {
-                    openGoogleReviews();
-                });
-            } else {
-                // Desktop: silent auto-copy and open
-                const copied = await copyTextToClipboard(reviewText);
-                showToast(copied ? "Copied! Opening Google Reviews..." : "Opening Google Reviews...");
-                openGoogleReviews();
-            }
-        }
-
-        async function shareOnWhatsApp() {
-            const reviewText = document.getElementById('reviewTextarea').value.trim();
-            await copyTextToClipboard(reviewText);
-
-            if (currentReviewId) {
-                fetch(`/r/${businessSlug}/click/${currentReviewId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
-            }
-
+            copyTextSync(reviewText);
+            trackClick();
             if (whatsappReviewUrl) {
                 window.open(whatsappReviewUrl, '_blank');
             }
