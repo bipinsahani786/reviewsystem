@@ -20,7 +20,7 @@ class GeminiReviewGenerator
         if (! empty($apiKey)) {
             try {
                 $reviewText = $this->callGeminiApi($apiKey, $business, $rating, $tags);
-                if (! empty($reviewText)) {
+                if (! empty($reviewText) && mb_strlen($reviewText) >= 35) {
                     return $reviewText;
                 }
             } catch (\Throwable $e) {
@@ -32,53 +32,71 @@ class GeminiReviewGenerator
     }
 
     /**
-     * Call the Google Gemini API (generateContent endpoint).
+     * Call the Google Gemini API with model fallback and strict validation.
      */
     protected function callGeminiApi(string $apiKey, Business $business, int $rating, array $tags): ?string
     {
-        $model = config('services.gemini.model', 'gemini-1.5-flash');
+        $primaryModel = config('services.gemini.model', 'gemini-3.1-flash-lite');
+        $modelsToTry = array_unique([$primaryModel, 'gemini-3.1-flash-lite', 'gemini-3.8-flash']);
+
         $tagList = implode(', ', $tags);
         $language = strtolower($business->language_preference ?? 'hinglish');
 
         $prompt = <<<PROMPT
-You are a real customer who just visited "{$business->name}".
-Write a natural, conversational first-person Google review (2–3 sentences, max 45 words).
+You are a real customer writing a Google review for "{$business->name}".
+Star rating: {$rating}/5.
+Highlights to include: [{$tagList}].
+Language: {$language} — if Hinglish, write natural spoken Hindi-English like: "Food bohot badhiya tha, staff was very polite and helpful. Overall bohot accha experience raha!"
 Rules:
-1. Sound completely authentic, human, and casual — not like AI or marketing copy.
-2. Reflect the experience from these tags: [{$tagList}], star rating: {$rating}/5.
-3. Language: {$language} — if Hinglish, mix natural spoken Hindi-English like "Food bohot badhiya tha", "staff was very polite". If English, use conversational modern English.
-4. Vary openers and vocabulary. Never follow fixed templates.
-5. Output ONLY the review text. No quotes, no greetings, no rating numbers, no emojis.
+1. Write exactly 2 or 3 complete sentences (40 to 60 words).
+2. Sound 100% human, genuine, and conversational.
+3. NEVER output markdown symbols (no asterisks, no bullet points, no brackets, no quotes, no greeting).
+4. Output ONLY the review text.
 PROMPT;
 
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        foreach ($modelsToTry as $model) {
+            $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-        $response = Http::timeout(12)->post($endpoint, [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => $prompt],
-                    ],
-                ],
-            ],
-            'generationConfig' => [
-                'maxOutputTokens' => 120,
-                'temperature' => 0.90,
-            ],
-        ]);
-
-        if ($response->successful()) {
-            $data = $response->json();
-            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-            if ($text) {
-                return trim(trim($text, " \"'\n\r"));
+            $http = Http::timeout(10);
+            if (app()->isLocal()) {
+                $http = $http->withoutVerifying();
             }
-        } else {
-            Log::error('Gemini API returned error response', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
+
+            try {
+                $response = $http->post($endpoint, [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt],
+                            ],
+                        ],
+                    ],
+                    'generationConfig' => [
+                        'maxOutputTokens' => 500,
+                        'temperature' => 0.85,
+                    ],
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+                    if ($text) {
+                        // Clean markdown asterisks, quotes, leading numbering, stray parentheses
+                        $cleaned = trim($text, " \"'\n\r\t");
+                        $cleaned = preg_replace('/^[\d\.\)\s\*\#\-]+/', '', $cleaned);
+                        $cleaned = str_replace(['**', '##', '```', '"', '*'], '', $cleaned);
+                        $cleaned = trim($cleaned);
+
+                        // Must be a complete sentence with at least 35 characters
+                        if (mb_strlen($cleaned) >= 35) {
+                            return $cleaned;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Gemini model {$model} call failed: ".$e->getMessage());
+            }
         }
 
         return null;
@@ -87,7 +105,7 @@ PROMPT;
     /**
      * Procedural fallback review generator with high variety.
      */
-    protected function generateFallbackReview(Business $business, int $rating, array $tags): string
+    public function generateFallbackReview(Business $business, int $rating, array $tags): string
     {
         $tagsStr = count($tags) > 0 ? implode(' and ', array_slice($tags, 0, 2)) : 'overall experience';
         $language = strtolower($business->language_preference ?? 'hinglish');

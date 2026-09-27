@@ -52,6 +52,14 @@ class PublicReviewController extends Controller
             $validated['tags']
         );
 
+        if (empty($reviewText) || mb_strlen(trim($reviewText)) < 25) {
+            $reviewText = $generator->generateFallbackReview(
+                $business,
+                (int) $validated['rating'],
+                $validated['tags']
+            );
+        }
+
         $review = GeneratedReview::create([
             'business_id' => $business->id,
             'rating' => (int) $validated['rating'],

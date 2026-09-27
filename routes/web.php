@@ -140,4 +140,14 @@ Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->middleware('auth')->name('dashboard');
 
+// Reliable fallback route for serving uploaded public files (logos, favicons, standee assets)
+Route::get('/storage/{path}', function (string $path) {
+    $filePath = storage_path('app/public/'.$path);
+    if (! file_exists($filePath)) {
+        abort(404);
+    }
+
+    return response()->file($filePath);
+})->where('path', '.*')->name('storage.local');
+
 require __DIR__.'/auth.php';

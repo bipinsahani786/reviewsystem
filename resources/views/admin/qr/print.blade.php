@@ -283,8 +283,14 @@
             <!-- BUSINESS IDENTITY HEADER -->
             <div class="flex flex-col items-center mb-3">
                 @if($business->logo_url)
-                    <div class="p-1 rounded-2xl bg-white shadow-md border border-slate-100 mb-2">
-                        <img src="{{ $business->logo_url }}" alt="{{ $business->name }}" class="w-14 h-14 rounded-xl object-cover">
+                    <div class="p-1 rounded-2xl bg-white shadow-md border border-slate-100 mb-2 overflow-hidden flex items-center justify-center">
+                        <img src="{{ $business->logo_url }}" alt="{{ $business->name }}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                             class="w-14 h-14 rounded-xl object-contain">
+                        <div class="w-14 h-14 rounded-xl items-center justify-center font-black text-white shadow-md text-2xl" 
+                             style="display:none; background-color: {{ $business->theme_color ?: '#2563eb' }};">
+                            {{ strtoupper(substr($business->name, 0, 1)) }}
+                        </div>
                     </div>
                 @else
                     <div class="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-white shadow-md text-2xl mb-2" style="background-color: {{ $business->theme_color ?: '#2563eb' }};">

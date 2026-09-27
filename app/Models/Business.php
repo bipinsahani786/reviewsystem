@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Business extends Model
 {
@@ -72,7 +71,7 @@ class Business extends Model
             return $this->logo;
         }
 
-        return Storage::disk('public')->url($this->logo);
+        return asset('storage/'.ltrim($this->logo, '/'));
     }
 
     public function getClickThroughRateAttribute(): float
