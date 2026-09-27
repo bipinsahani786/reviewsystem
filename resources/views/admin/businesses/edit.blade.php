@@ -138,6 +138,24 @@
                         </div>
                     @endif
 
+                    <!-- Subscription Plan -->
+                    @if(isset($plans) && $plans->count() > 0)
+                        <div class="pt-4 border-t border-slate-100">
+                            <label for="plan_id" class="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+                                Subscription Plan Tier
+                            </label>
+                            <select name="plan_id" id="plan_id" class="w-full text-sm rounded-xl border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500 p-3 font-semibold">
+                                <option value="">-- No Plan / Custom Tier --</option>
+                                @foreach($plans as $p)
+                                    <option value="{{ $p->id }}" {{ old('plan_id', $business->plan_id) == $p->id ? 'selected' : '' }}>
+                                        {{ $p->name }} — {{ $p->currency }}{{ number_format($p->price) }}{{ $p->billing_cycle }} ({{ $p->tagline ?: 'Active' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-[11px] text-slate-400 mt-1">Upgrade or modify the active plan assigned to this business.</p>
+                        </div>
+                    @endif
+
                     <!-- Active Toggle -->
                     <div class="flex items-center space-x-2 pt-2">
                         <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $business->is_active) ? 'checked' : '' }}

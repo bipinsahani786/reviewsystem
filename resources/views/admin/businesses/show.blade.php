@@ -9,13 +9,25 @@
                     <h2 class="font-extrabold text-2xl text-slate-900 leading-tight">
                         {{ $business->name }}
                     </h2>
-                    <div class="flex items-center space-x-2 text-xs text-slate-500 mt-0.5">
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
                         <span>Slug: <code class="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded">{{ $business->slug }}</code></span>
                         <span>&bull;</span>
-                        <a href="{{ $business->public_url }}" target="_blank" class="text-blue-600 hover:underline flex items-center">
-                            <span>Open Public Page</span>
+                        <a href="{{ $business->public_url }}" target="_blank" class="text-emerald-600 font-semibold hover:underline flex items-center">
+                            <span>Open Customer Review Flow</span>
                             <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         </a>
+                        @if($business->plan)
+                            <span>&bull;</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold uppercase">
+                                💎 {{ $business->plan->name }}
+                            </span>
+                        @endif
+                        @if(Auth::user()->isSuperAdmin() && $business->owner)
+                            <span>&bull;</span>
+                            <span class="text-slate-500">
+                                Client: <strong class="text-slate-800">{{ $business->owner->name }}</strong>
+                            </span>
+                        @endif
                     </div>
                 </div>
             </div>

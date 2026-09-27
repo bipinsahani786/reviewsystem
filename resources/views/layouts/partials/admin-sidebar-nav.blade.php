@@ -48,15 +48,29 @@
             </a>
 
             {{-- Review Tags --}}
-            <a href="{{ route('admin.tags.index') }}" 
-               class="flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition group {{ request()->routeIs('admin.tags.*') ? 'nav-item-active' : 'nav-item-inactive' }}">
-                <svg class="w-4 h-4 mr-3 flex-shrink-0 {{ request()->routeIs('admin.tags.*') ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                <span>Review Preset Tags</span>
-            </a>
+            @php
+                $sidebarBusiness = request()->route('business');
+                if (! $sidebarBusiness instanceof \App\Models\Business && is_numeric($sidebarBusiness)) {
+                    $sidebarBusiness = \App\Models\Business::find($sidebarBusiness);
+                }
+                if (! $sidebarBusiness) {
+                    $sidebarBusiness = Auth::user()->isSuperAdmin() 
+                        ? \App\Models\Business::first() 
+                        : Auth::user()->businesses()->first();
+                }
+            @endphp
+            @if($sidebarBusiness)
+                <a href="{{ route('admin.businesses.tags.index', $sidebarBusiness) }}" 
+                   class="flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition group {{ request()->routeIs('admin.businesses.tags.*') ? 'nav-item-active' : 'nav-item-inactive' }}">
+                    <svg class="w-4 h-4 mr-3 flex-shrink-0 {{ request()->routeIs('admin.businesses.tags.*') ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span>Review Preset Tags</span>
+                </a>
+            @endif
         </div>
     </div>
 
-    {{-- GROUP 3: COMMERCIAL & GROWTH --}}
+    {{-- GROUP 3: COMMERCIAL & GROWTH (SUPER ADMIN ONLY) --}}
+    @if(Auth::user()->isSuperAdmin())
     <div>
         <div class="px-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400/80 mb-2">
             Growth &amp; Revenue
@@ -91,6 +105,7 @@
             </a>
         </div>
     </div>
+    @endif
 
     {{-- GROUP 4: CONFIGURATION --}}
     <div>
@@ -98,18 +113,20 @@
             Configuration
         </div>
         <div class="space-y-1">
-            {{-- Site Settings (Branding, Logo, Favicon, Helplines) --}}
+            {{-- Site Settings (Branding, Logo, Favicon, Helplines - Super Admin Only) --}}
+            @if(Auth::user()->isSuperAdmin())
             <a href="{{ route('admin.settings.index') }}" 
                class="flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition group {{ request()->routeIs('admin.settings.*') ? 'nav-item-active' : 'nav-item-inactive' }}">
                 <svg class="w-4 h-4 mr-3 flex-shrink-0 {{ request()->routeIs('admin.settings.*') ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span>Brand &amp; Site Settings</span>
             </a>
+            @endif
 
             {{-- Profile --}}
             <a href="{{ route('profile.edit') }}" 
                class="flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition group {{ request()->routeIs('profile.*') ? 'nav-item-active' : 'nav-item-inactive' }}">
                 <svg class="w-4 h-4 mr-3 flex-shrink-0 {{ request()->routeIs('profile.*') ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <span>Admin Profile</span>
+                <span>My Profile</span>
             </a>
         </div>
     </div>

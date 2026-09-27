@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Business;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,8 +46,9 @@ class BusinessController extends Controller
     public function create(): View
     {
         $users = Auth::user()->isSuperAdmin() ? User::orderBy('name')->get() : null;
+        $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
 
-        return view('admin.businesses.create', compact('users'));
+        return view('admin.businesses.create', compact('users', 'plans'));
     }
 
     /**
@@ -71,6 +73,7 @@ class BusinessController extends Controller
             'language_preference' => ['required', Rule::in(['hinglish', 'english', 'hindi'])],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'owner_user_id' => [$user->isSuperAdmin() ? 'required' : 'nullable', 'exists:users,id'],
+            'plan_id' => ['nullable', 'exists:plans,id'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -92,6 +95,7 @@ class BusinessController extends Controller
             'language_preference' => $validated['language_preference'] ?? 'hinglish',
             'logo' => $logoPath,
             'owner_user_id' => $ownerId,
+            'plan_id' => ! empty($validated['plan_id']) ? (int) $validated['plan_id'] : null,
             'is_active' => $request->boolean('is_active', true),
         ]);
 
@@ -133,8 +137,9 @@ class BusinessController extends Controller
     {
         $business = $this->getAuthorizedBusiness($business);
         $users = Auth::user()->isSuperAdmin() ? User::orderBy('name')->get() : null;
+        $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
 
-        return view('admin.businesses.edit', compact('business', 'users'));
+        return view('admin.businesses.edit', compact('business', 'users', 'plans'));
     }
 
     /**
@@ -158,6 +163,7 @@ class BusinessController extends Controller
             'language_preference' => ['required', Rule::in(['hinglish', 'english', 'hindi'])],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'owner_user_id' => [$user->isSuperAdmin() ? 'required' : 'nullable', 'exists:users,id'],
+            'plan_id' => ['nullable', 'exists:plans,id'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -180,6 +186,10 @@ class BusinessController extends Controller
         $business->whatsapp_number = $validated['whatsapp_number'] ?? null;
         $business->language_preference = $validated['language_preference'];
         $business->is_active = $request->boolean('is_active', true);
+
+        if (array_key_exists('plan_id', $validated)) {
+            $business->plan_id = ! empty($validated['plan_id']) ? (int) $validated['plan_id'] : null;
+        }
 
         if ($user->isSuperAdmin() && ! empty($validated['owner_user_id'])) {
             $business->owner_user_id = (int) $validated['owner_user_id'];

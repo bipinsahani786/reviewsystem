@@ -101,28 +101,31 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Analytics & Logs
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
-    // Incoming Leads & Inquiries
-    Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
-    Route::put('leads/{lead}', [LeadController::class, 'update'])->name('leads.update');
-    Route::delete('leads/{lead}', [LeadController::class, 'destroy'])->name('leads.destroy');
+    // Super-Admin Only Management (Leads, Brand Settings, Plans, Testimonials)
+    Route::middleware('super_admin')->group(function () {
+        // Incoming Leads & Inquiries
+        Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
+        Route::put('leads/{lead}', [LeadController::class, 'update'])->name('leads.update');
+        Route::delete('leads/{lead}', [LeadController::class, 'destroy'])->name('leads.destroy');
 
-    // Site Settings (Contact, Address, Phone, Hours)
-    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+        // Site Settings (Brand, Logo, Favicon, Contact, Address, Phone, Hours)
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 
-    // Pricing Plans Management
-    Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
-    Route::get('plans/{plan}/edit', [PlanController::class, 'edit'])->name('plans.edit');
-    Route::put('plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
+        // Pricing Plans Management
+        Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
+        Route::get('plans/{plan}/edit', [PlanController::class, 'edit'])->name('plans.edit');
+        Route::put('plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
 
-    // Testimonials Management
-    Route::get('testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
-    Route::get('testimonials/create', [TestimonialController::class, 'create'])->name('testimonials.create');
-    Route::post('testimonials', [TestimonialController::class, 'store'])->name('testimonials.store');
-    Route::get('testimonials/{testimonial}/edit', [TestimonialController::class, 'edit'])->name('testimonials.edit');
-    Route::put('testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
-    Route::patch('testimonials/{testimonial}/toggle', [TestimonialController::class, 'toggle'])->name('testimonials.toggle');
-    Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+        // Testimonials Management
+        Route::get('testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+        Route::get('testimonials/create', [TestimonialController::class, 'create'])->name('testimonials.create');
+        Route::post('testimonials', [TestimonialController::class, 'store'])->name('testimonials.store');
+        Route::get('testimonials/{testimonial}/edit', [TestimonialController::class, 'edit'])->name('testimonials.edit');
+        Route::put('testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
+        Route::patch('testimonials/{testimonial}/toggle', [TestimonialController::class, 'toggle'])->name('testimonials.toggle');
+        Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+    });
 });
 
 // Profile Management (Standard Breeze names)

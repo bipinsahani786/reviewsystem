@@ -30,6 +30,7 @@ class DashboardController extends Controller
         $overallAvgRating = $avgRating ? round((float) $avgRating, 1) : 5.0;
 
         $businesses = (clone $businessesQuery)
+            ->with(['plan', 'owner'])
             ->withCount([
                 'reviews',
                 'reviews as clicked_reviews_count' => function ($q) {

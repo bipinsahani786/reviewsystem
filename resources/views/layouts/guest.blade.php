@@ -316,8 +316,12 @@
             {{-- Mobile-only logo --}}
             <div style="display:none;align-items:center;gap:.625rem;" class="mobile-logo">
                 <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:.625rem;text-decoration:none;">
-                    <div style="width:2rem;height:2rem;border-radius:.5rem;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;">★</div>
-                    <span style="font-size:1.05rem;font-weight:800;color:#18181b;">Review<span style="color:#059669;">Booster</span></span>
+                    @if($guestLogo)
+                        <img src="{{ $guestLogo }}" alt="{{ $guestBrandName }}" style="height:2rem;width:auto;max-width:8rem;object-fit:contain;">
+                    @else
+                        <div style="width:2rem;height:2rem;border-radius:.5rem;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;">★</div>
+                        <span style="font-size:1.05rem;font-weight:800;color:#18181b;">{{ $guestBrandName }}</span>
+                    @endif
                 </a>
             </div>
 

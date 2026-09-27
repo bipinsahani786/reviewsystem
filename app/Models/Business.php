@@ -20,6 +20,7 @@ class Business extends Model
         'theme_color',
         'whatsapp_number',
         'owner_user_id',
+        'plan_id',
         'is_active',
         'language_preference',
     ];
@@ -34,6 +35,11 @@ class Business extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
     }
 
     public function tags(): HasMany

@@ -128,9 +128,18 @@
                                                     @if(!$business->is_active)
                                                         <span class="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Inactive</span>
                                                     @endif
+                                                    @if($business->plan)
+                                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-extrabold">
+                                                            💎 {{ $business->plan->name }}
+                                                        </span>
+                                                    @endif
                                                 </div>
-                                                <div class="text-xs text-slate-400 mt-0.5">
-                                                    ID: <span class="font-mono">{{ Str::limit($business->google_place_id, 14) }}</span>
+                                                <div class="text-xs text-slate-400 mt-0.5 flex items-center space-x-2">
+                                                    <span>ID: <code class="font-mono text-slate-600">{{ Str::limit($business->google_place_id, 14) }}</code></span>
+                                                    @if(Auth::user()->isSuperAdmin() && $business->owner)
+                                                        <span>&bull;</span>
+                                                        <span class="text-slate-500">Client: <strong>{{ $business->owner->name }}</strong></span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>

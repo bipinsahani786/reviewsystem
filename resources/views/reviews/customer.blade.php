@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+@php
+    $sysFavicon = \App\Models\SiteSetting::faviconUrl();
+    $sysBrandName = \App\Models\SiteSetting::brandName();
+@endphp
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Review {{ $business->name }} on Google</title>
     <meta name="description" content="Share your experience and review {{ $business->name }} on Google quickly with AI assistance.">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @if($sysFavicon)
+        <link rel="icon" href="{{ $sysFavicon }}">
+    @else
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
+    @endif
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -285,7 +295,7 @@
                         ← Back to review
                     </button>
                     <a href="{{ route('home') }}" class="text-[11px] text-slate-400 hover:text-slate-600">
-                        Powered by AI Review Booster
+                        Powered by {{ $sysBrandName }}
                     </a>
                 </div>
             </section>
