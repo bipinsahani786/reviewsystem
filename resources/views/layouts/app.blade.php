@@ -61,6 +61,21 @@
 </head>
 <body class="h-full antialiased text-slate-800 bg-slate-50 selection:bg-emerald-500 selection:text-white" x-data="{ sidebarOpen: false, profileDropdown: false }">
 
+@if(session()->has('impersonated_by'))
+    <div class="bg-amber-400 text-slate-950 px-4 py-2.5 text-xs font-bold flex flex-wrap items-center justify-between gap-3 shadow-md sticky top-0 z-50 border-b border-amber-500">
+        <div class="flex items-center space-x-2">
+            <span class="text-base">⚡</span>
+            <span><strong>Impersonation Mode Active:</strong> You are browsing as <u>{{ Auth::user()->name }}</u> ({{ Auth::user()->email }}).</span>
+        </div>
+        <form method="POST" action="{{ route('admin.impersonate.leave') }}" class="m-0">
+            @csrf
+            <button type="submit" class="inline-flex items-center px-3.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold shadow-sm transition">
+                <span>Leave Impersonation &amp; Return to Super Admin &rarr;</span>
+            </button>
+        </form>
+    </div>
+@endif
+
 <div class="min-h-screen flex flex-col lg:flex-row">
 
     {{-- ════════════════════════════════════════════════════════════════ --}}
@@ -217,12 +232,23 @@
                         <span>Google 100% Policy Safe</span>
                     </div>
 
-                    {{-- Add Business Quick CTA --}}
-                    <a href="{{ route('admin.businesses.create') }}" 
-                       class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                        <span>Add Business</span>
-                    </a>
+                    {{-- Quick Action CTA: Add Business (or My QR Standee if already created) --}}
+                    @if(Auth::user()->isSuperAdmin() || !Auth::user()->businesses()->exists())
+                        <a href="{{ route('admin.businesses.create') }}" 
+                           class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            <span>Add Business</span>
+                        </a>
+                    @else
+                        @php $headerBiz = Auth::user()->businesses()->first(); @endphp
+                        @if($headerBiz)
+                            <a href="{{ route('admin.businesses.qr.show', $headerBiz) }}" 
+                               class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                <span>My QR Standee</span>
+                            </a>
+                        @endif
+                    @endif
 
                     {{-- Live Website Link --}}
                     <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"

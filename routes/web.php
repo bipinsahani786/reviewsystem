@@ -1,17 +1,24 @@
 <?php
 
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\IndustryPresetController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\QrCodeController;
 use App\Http\Controllers\Admin\ReviewTagController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicReviewController;
+use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 
 // Landing & Marketing Pages (No auth required)
@@ -20,7 +27,54 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/pricing', function () {
-    return view('marketing.pricing');
+    $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
+
+    if ($plans->isEmpty()) {
+        $plans = collect([
+            new Plan([
+                'name' => 'Starter Plan',
+                'tagline' => 'Single Outlet',
+                'description' => 'Designed for independent cafes, single-doctor clinics, and boutique shops.',
+                'price' => 999,
+                'yearly_price' => 9588,
+                'currency' => '₹',
+                'billing_cycle' => '/ month',
+                'billing_period' => 'monthly',
+                'trial_days' => 14,
+                'features' => ['1 Google Business Profile', 'Unlimited Smart AI Review Drafts', 'Print-Ready High-Res QR PDFs', 'Hinglish & English Language Modes', 'Email & Ticket Support'],
+                'is_active' => true,
+            ]),
+            new Plan([
+                'name' => 'Pro Growth Plan',
+                'tagline' => '1–3 Locations',
+                'badge' => 'Most Popular for Merchants',
+                'description' => 'For busy restaurants, high-footfall salons, and healthcare centers.',
+                'price' => 2499,
+                'yearly_price' => 23988,
+                'currency' => '₹',
+                'billing_cycle' => '/ month',
+                'billing_period' => 'monthly',
+                'trial_days' => 14,
+                'features' => ['Up to 3 Business Locations', 'Negative Review Private Shield', 'Click-Through (CTR) Conversion Analytics', '1 Free Physical Acrylic Standee Shipped', 'Priority WhatsApp Concierge Support'],
+                'is_active' => true,
+            ]),
+            new Plan([
+                'name' => 'Agency & Chain',
+                'tagline' => '10 Outlets',
+                'description' => 'Designed for multi-outlet retail chains or marketing agencies.',
+                'price' => 5999,
+                'yearly_price' => 57588,
+                'currency' => '₹',
+                'billing_cycle' => '/ month',
+                'billing_period' => 'monthly',
+                'trial_days' => 14,
+                'features' => ['Up to 10 Business Locations Included', 'White-label Reseller Sub-Accounts', '5 Free Acrylic Standees Shipped', 'CSV / PDF Automated Executive Reports', 'Dedicated Account Manager & Phone SLA'],
+                'is_active' => true,
+            ]),
+        ]);
+    }
+
+    return view('marketing.pricing', compact('plans'));
 })->name('pricing');
 
 Route::get('/how-it-works', function () {
@@ -101,8 +155,30 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Analytics & Logs
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
-    // Super-Admin Only Management (Leads, Brand Settings, Plans, Testimonials)
+    // Subscription & Billing (SaaS Plans, 14-day trial & Razorpay checkout)
+    Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('billing/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
+    Route::post('billing/verify', [BillingController::class, 'verifyPayment'])->name('billing.verify');
+
+    // Customer & Admin Invoices
+    Route::get('invoices/{transaction}', [InvoiceController::class, 'show'])->name('invoices.show');
+
+    // Impersonation
+    Route::post('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
+    Route::post('impersonate/{user}', [ImpersonationController::class, 'impersonate'])
+        ->middleware('super_admin')
+        ->name('impersonate.start');
+
+    // Super-Admin Only Management (Leads, Brand Settings, Plans, Testimonials, Users, Transactions)
     Route::middleware('super_admin')->group(function () {
+        // User Accounts & Impersonation
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/toggle-admin', [UserController::class, 'toggleAdmin'])->name('users.toggle-admin');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // Revenue Logs & Transactions
+        Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
+
         // Incoming Leads & Inquiries
         Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
         Route::put('leads/{lead}', [LeadController::class, 'update'])->name('leads.update');
@@ -113,9 +189,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 
         // Pricing Plans Management
-        Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
-        Route::get('plans/{plan}/edit', [PlanController::class, 'edit'])->name('plans.edit');
-        Route::put('plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
+        Route::resource('plans', PlanController::class)->except(['show']);
+
+        // Industry Presets Management (Customizable Tag Presets by Super Admin)
+        Route::post('industry-presets/reseed', [IndustryPresetController::class, 'reseed'])->name('industry-presets.reseed');
+        Route::resource('industry-presets', IndustryPresetController::class)->except(['show']);
+
+        // Super-Admin Subscription Management Actions
+        Route::post('businesses/{business}/extend-trial', [BusinessController::class, 'extendTrial'])->name('businesses.extend-trial');
+        Route::post('businesses/{business}/activate-subscription', [BusinessController::class, 'activateSubscription'])->name('businesses.activate-subscription');
 
         // Testimonials Management
         Route::get('testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
@@ -127,6 +209,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
     });
 });
+
+// Razorpay Public Webhook
+Route::post('razorpay/webhook', [BillingController::class, 'webhook'])->name('razorpay.webhook');
 
 // Profile Management (Standard Breeze names)
 Route::middleware('auth')->group(function () {

@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Business;
 use App\Models\GeneratedReview;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -16,6 +20,9 @@ class DashboardController extends Controller
      */
     public function index(Request $request): View
     {
+        $user = Auth::user();
+        $isSuperAdmin = $user && $user->isSuperAdmin();
+
         $businessesQuery = $this->getAuthorizedBusinessesQuery();
         $businessIds = (clone $businessesQuery)->pluck('id');
 
@@ -47,6 +54,49 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Superadmin Executive SaaS Metrics
+        $totalUsers = 0;
+        $newUsersThisMonth = 0;
+        $activeSubscribersCount = 0;
+        $trialUsersCount = 0;
+        $expiredUsersCount = 0;
+        $totalRevenue = 0.0;
+        $thisMonthRevenue = 0.0;
+        $estimatedMrr = 0.0;
+        $recentUsers = collect();
+        $recentTransactions = collect();
+
+        if ($isSuperAdmin) {
+            $totalUsers = User::count();
+            $newUsersThisMonth = User::where('created_at', '>=', now()->startOfMonth())->count();
+            $activeSubscribersCount = Business::where('subscription_status', 'active')->count();
+            $trialUsersCount = Business::where('subscription_status', 'trial')->count();
+            $expiredUsersCount = Business::where('subscription_status', 'expired')->count();
+
+            $totalRevenue = (float) Transaction::where('status', 'completed')->sum('amount');
+            $thisMonthRevenue = (float) Transaction::where('status', 'completed')
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->sum('amount');
+
+            // Estimated Monthly Recurring Revenue (MRR)
+            $activeMonthly = Business::where('subscription_status', 'active')
+                ->where('billing_cycle', 'monthly')
+                ->with('plan')
+                ->get()
+                ->sum(fn ($b) => $b->plan?->price ?? 0);
+
+            $activeYearly = Business::where('subscription_status', 'active')
+                ->where('billing_cycle', 'yearly')
+                ->with('plan')
+                ->get()
+                ->sum(fn ($b) => ($b->plan?->yearly_price ?? ($b->plan?->price ?? 0) * 12) / 12);
+
+            $estimatedMrr = round($activeMonthly + $activeYearly, 2);
+
+            $recentUsers = User::with('businesses.plan')->latest()->take(5)->get();
+            $recentTransactions = Transaction::with(['business', 'plan', 'user'])->latest()->take(5)->get();
+        }
+
         return view('admin.dashboard', compact(
             'totalBusinesses',
             'totalReviews',
@@ -54,7 +104,18 @@ class DashboardController extends Controller
             'overallCtr',
             'overallAvgRating',
             'businesses',
-            'recentReviews'
+            'recentReviews',
+            'isSuperAdmin',
+            'totalUsers',
+            'newUsersThisMonth',
+            'activeSubscribersCount',
+            'trialUsersCount',
+            'expiredUsersCount',
+            'totalRevenue',
+            'thisMonthRevenue',
+            'estimatedMrr',
+            'recentUsers',
+            'recentTransactions'
         ));
     }
 }

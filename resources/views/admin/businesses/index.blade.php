@@ -9,12 +9,14 @@
                     Manage client businesses, customize colors, Google Place IDs, tags, and QR codes.
                 </p>
             </div>
+            @if(auth()->user()->isSuperAdmin() || !auth()->user()->businesses()->exists())
             <div>
                 <a href="{{ route('admin.businesses.create') }}" class="inline-flex items-center px-4 py-2.5 bg-blue-600 border border-transparent rounded-xl text-xs font-bold text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     Add New Business
                 </a>
             </div>
+            @endif
         </div>
     </x-slot>
 
@@ -25,6 +27,13 @@
                 <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold rounded-2xl flex items-center space-x-2">
                     <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold rounded-2xl flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>{{ session('error') }}</span>
                 </div>
             @endif
 

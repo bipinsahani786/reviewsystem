@@ -32,110 +32,56 @@
         </div>
     </div>
 
-    <!-- Section 5: The 3 Subscription Plan Cards -->
+    <!-- Section 5: Dynamic Subscription Plan Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left mt-12">
-        <!-- Starter Plan -->
-        <div class="p-8 bg-white border border-zinc-200 rounded-3xl shadow-sm space-y-6 flex flex-col justify-between">
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-zinc-900">Starter Plan</h3>
-                    <span class="px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-700 text-xs font-semibold">Single Outlet</span>
-                </div>
-                <p class="text-xs text-zinc-500 leading-relaxed">
-                    Designed for independent cafes, single-doctor clinics, and boutique shops getting started with Google Reviews.
-                </p>
-                <div class="pt-2">
-                    <div class="flex items-baseline space-x-1">
-                        <span class="text-4xl font-extrabold text-zinc-900" x-text="annual ? '₹799' : '₹999'"></span>
-                        <span class="text-xs text-zinc-500">/ month</span>
+        @foreach($plans as $plan)
+            <div class="p-8 bg-white {{ $plan->badge ? 'border-2 border-emerald-600 shadow-md relative' : 'border border-zinc-200 shadow-sm' }} rounded-3xl space-y-6 flex flex-col justify-between">
+                @if($plan->badge)
+                    <div class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1 rounded-full shadow-sm">
+                        {{ $plan->badge }}
                     </div>
-                    <div class="text-[11px] text-zinc-600 mt-1" x-text="annual ? 'Billed ₹9,588 annually (Save ₹2,400)' : 'Billed monthly, cancel anytime'"></div>
-                </div>
+                @endif
 
-                <div class="border-t border-zinc-100 pt-4 space-y-3 text-xs text-zinc-700">
-                    <div class="font-bold text-zinc-900 text-xs uppercase tracking-wider">Plan Highlights:</div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span><strong>1</strong> Google Business Profile</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Unlimited Smart AI Review Drafts</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Print-Ready High-Res QR PDFs</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Hinglish & English Language Modes</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Email & Ticket Support</span></div>
-                </div>
-            </div>
-
-            <a href="{{ route('register') }}" class="w-full text-center py-3 rounded-xl border border-zinc-300 text-zinc-800 font-semibold text-xs hover:bg-zinc-50 transition">
-                Start 14-Day Free Trial
-            </a>
-        </div>
-
-        <!-- Pro Growth Plan (Highlighted) -->
-        <div class="p-8 bg-white border-2 border-emerald-600 rounded-3xl shadow-md space-y-6 flex flex-col justify-between relative">
-            <div class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1 rounded-full shadow-sm">
-                Most Popular for Merchants
-            </div>
-
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-zinc-900">Pro Growth Plan</h3>
-                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold">1–3 Locations</span>
-                </div>
-                <p class="text-xs text-zinc-500 leading-relaxed">
-                    For busy restaurants, high-footfall salons, and healthcare centers wanting maximum reviews and brand protection.
-                </p>
-                <div class="pt-2">
-                    <div class="flex items-baseline space-x-1">
-                        <span class="text-4xl font-extrabold text-zinc-900" x-text="annual ? '₹1,999' : '₹2,499'"></span>
-                        <span class="text-xs text-zinc-500">/ month</span>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-zinc-900">{{ $plan->name }}</h3>
+                        @if($plan->tagline)
+                            <span class="px-2.5 py-0.5 rounded-full {{ $plan->badge ? 'bg-emerald-50 text-emerald-800' : 'bg-zinc-100 text-zinc-700' }} text-xs font-semibold">
+                                {{ $plan->tagline }}
+                            </span>
+                        @endif
                     </div>
-                    <div class="text-[11px] text-zinc-600 mt-1" x-text="annual ? 'Billed ₹23,988 annually (Save ₹6,000)' : 'Billed monthly, cancel anytime'"></div>
-                </div>
-
-                <div class="border-t border-zinc-100 pt-4 space-y-3 text-xs text-zinc-700">
-                    <div class="font-bold text-zinc-900 text-xs uppercase tracking-wider">Everything in Starter, plus:</div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span><strong>Up to 3</strong> Business Locations</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span><strong>Negative Review Private Shield</strong></span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Click-Through (CTR) Conversion Analytics</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span><strong>1 Free Physical Acrylic Standee Shipped</strong></span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Priority WhatsApp Concierge Support</span></div>
-                </div>
-            </div>
-
-            <a href="{{ route('register') }}" class="btn-hover w-full text-center py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm transition">
-                Subscribe to Pro Growth &rarr;
-            </a>
-        </div>
-
-        <!-- Agency & Franchise Plan -->
-        <div class="p-8 bg-white border border-zinc-200 rounded-3xl shadow-sm space-y-6 flex flex-col justify-between">
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-zinc-900">Agency & Chain</h3>
-                    <span class="px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-700 text-xs font-semibold">10 Outlets</span>
-                </div>
-                <p class="text-xs text-zinc-500 leading-relaxed">
-                    Designed for multi-outlet retail chains, hospital networks, or marketing agencies reselling review booster systems.
-                </p>
-                <div class="pt-2">
-                    <div class="flex items-baseline space-x-1">
-                        <span class="text-4xl font-extrabold text-zinc-900" x-text="annual ? '₹4,799' : '₹5,999'"></span>
-                        <span class="text-xs text-zinc-500">/ month</span>
+                    <p class="text-xs text-zinc-500 leading-relaxed">
+                        {{ $plan->description }}
+                    </p>
+                    <div class="pt-2">
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-4xl font-extrabold text-zinc-900" 
+                                  x-text="annual && {{ $plan->yearly_price ? 'true' : 'false' }} ? '₹' + Math.round({{ $plan->yearly_price ?? 0 }} / 12).toLocaleString('en-IN') : '{{ $plan->formatted_price }}'"></span>
+                            <span class="text-xs text-zinc-500">/ month</span>
+                        </div>
+                        <div class="text-[11px] text-zinc-600 mt-1" 
+                             x-text="annual && {{ $plan->yearly_price ? 'true' : 'false' }} ? 'Billed ₹' + Number({{ $plan->yearly_price ?? 0 }}).toLocaleString('en-IN') + ' annually (Save 20%)' : 'Billed monthly, cancel anytime'"></div>
                     </div>
-                    <div class="text-[11px] text-zinc-600 mt-1" x-text="annual ? 'Billed ₹57,588 annually (Save ₹14,400)' : 'Billed monthly, cancel anytime'"></div>
+
+                    <div class="border-t border-zinc-100 pt-4 space-y-3 text-xs text-zinc-700">
+                        <div class="font-bold text-zinc-900 text-xs uppercase tracking-wider">Plan Highlights:</div>
+                        @if(is_array($plan->features))
+                            @foreach($plan->features as $feature)
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-emerald-600 font-bold">✓</span>
+                                    <span>{{ $feature }}</span>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
 
-                <div class="border-t border-zinc-100 pt-4 space-y-3 text-xs text-zinc-700">
-                    <div class="font-bold text-zinc-900 text-xs uppercase tracking-wider">Everything in Pro, plus:</div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span><strong>Up to 10</strong> Business Locations Included</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>White-label Reseller Sub-Accounts</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span><strong>5 Free Acrylic Standees Shipped</strong></span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>CSV / PDF Automated Executive Reports</span></div>
-                    <div class="flex items-center space-x-2"><span class="text-emerald-600 font-bold">✓</span><span>Dedicated Account Manager & Phone SLA</span></div>
-                </div>
+                <a href="{{ route('register') }}" class="w-full text-center py-3 rounded-xl {{ $plan->badge ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm' : 'border border-zinc-300 text-zinc-800 hover:bg-zinc-50' }} font-semibold text-xs transition">
+                    Start {{ $plan->trial_days }}-Day Free Trial
+                </a>
             </div>
-
-            <a href="{{ route('register') }}" class="w-full text-center py-3 rounded-xl border border-zinc-300 text-zinc-800 font-semibold text-xs hover:bg-zinc-50 transition">
-                Start 14-Day Free Trial
-            </a>
-        </div>
+        @endforeach
     </div>
 </section>
 

@@ -31,6 +31,18 @@
                     </div>
                 @endif
 
+                @if(!Auth::user()->isSuperAdmin())
+                    <div class="mb-6 p-4 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200 rounded-2xl flex items-center gap-3">
+                        <span class="text-2xl">🎁</span>
+                        <div>
+                            <div class="text-xs font-black text-amber-900">14-Day Free Trial Included</div>
+                            <div class="text-[11px] text-amber-800">
+                                Once created, your business will instantly start a 14-day free trial on the Starter Plan. No credit card required!
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <form action="{{ route('admin.businesses.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
 
@@ -112,6 +124,22 @@
                             <option value="english" {{ old('language_preference') == 'english' ? 'selected' : '' }}>Pure English (Conversational & Natural)</option>
                             <option value="hindi" {{ old('language_preference') == 'hindi' ? 'selected' : '' }}>Hindi (Pure Devanagari / Hindi tone)</option>
                         </select>
+                    </div>
+
+                    <!-- Industry Preset Pack -->
+                    <div>
+                        <label for="industry_preset_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            Industry Type (Pre-loads Review Chips)
+                        </label>
+                        <select name="industry_preset_id" id="industry_preset_id" class="w-full text-sm rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 p-3 font-medium">
+                            <option value="">Standard General Pack (6 Essential Chips)</option>
+                            @foreach($industryPresets as $preset)
+                                <option value="{{ $preset->id }}" {{ old('industry_preset_id') == $preset->id ? 'selected' : '' }}>
+                                    {{ $preset->icon }} {{ $preset->name }} ({{ $preset->tagCount() }} chips - {{ $preset->category_name }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Select an industry to automatically pre-populate tailored review highlight tags.</p>
                     </div>
 
                     <!-- WhatsApp Number -->

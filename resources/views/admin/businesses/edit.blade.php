@@ -138,21 +138,68 @@
                         </div>
                     @endif
 
-                    <!-- Subscription Plan -->
+                    <!-- Subscription Plan & Superadmin SaaS Controls -->
                     @if(isset($plans) && $plans->count() > 0)
-                        <div class="pt-4 border-t border-slate-100">
-                            <label for="plan_id" class="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                                Subscription Plan Tier
-                            </label>
-                            <select name="plan_id" id="plan_id" class="w-full text-sm rounded-xl border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500 p-3 font-semibold">
-                                <option value="">-- No Plan / Custom Tier --</option>
-                                @foreach($plans as $p)
-                                    <option value="{{ $p->id }}" {{ old('plan_id', $business->plan_id) == $p->id ? 'selected' : '' }}>
-                                        {{ $p->name }} — {{ $p->currency }}{{ number_format($p->price) }}{{ $p->billing_cycle }} ({{ $p->tagline ?: 'Active' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="text-[11px] text-slate-400 mt-1">Upgrade or modify the active plan assigned to this business.</p>
+                        <div class="pt-4 border-t border-slate-100 space-y-4">
+                            <div>
+                                <label for="plan_id" class="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+                                    Subscription Plan Tier
+                                </label>
+                                <select name="plan_id" id="plan_id" class="w-full text-sm rounded-xl border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500 p-3 font-semibold">
+                                    <option value="">-- No Plan / Custom Tier --</option>
+                                    @foreach($plans as $p)
+                                        <option value="{{ $p->id }}" {{ old('plan_id', $business->plan_id) == $p->id ? 'selected' : '' }}>
+                                            {{ $p->name }} — {{ $p->currency }}{{ number_format($p->price) }}{{ $p->billing_cycle }} ({{ $p->trial_days }}d trial, {{ $p->tagline ?: 'Active' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-[11px] text-slate-400 mt-1">Upgrade or modify the active plan assigned to this business.</p>
+                            </div>
+
+                            @if(Auth::user()->isSuperAdmin())
+                                <div class="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/60 space-y-4">
+                                    <div class="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                                        <span>⚡</span>
+                                        <span>Superadmin SaaS Subscription Controls</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="subscription_status" class="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">Subscription Status</label>
+                                            <select name="subscription_status" id="subscription_status" class="w-full text-xs rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 p-2.5 font-bold">
+                                                <option value="trial" {{ old('subscription_status', $business->subscription_status) === 'trial' ? 'selected' : '' }}>Trial (Free Trial Period)</option>
+                                                <option value="active" {{ old('subscription_status', $business->subscription_status) === 'active' ? 'selected' : '' }}>Active (Paid Subscription)</option>
+                                                <option value="expired" {{ old('subscription_status', $business->subscription_status) === 'expired' ? 'selected' : '' }}>Expired (Restricted Access)</option>
+                                                <option value="cancelled" {{ old('subscription_status', $business->subscription_status) === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label for="billing_cycle" class="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">Billing Cycle</label>
+                                            <select name="billing_cycle" id="billing_cycle" class="w-full text-xs rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 p-2.5 font-bold">
+                                                <option value="monthly" {{ old('billing_cycle', $business->billing_cycle) === 'monthly' ? 'selected' : '' }}>Monthly Billing</option>
+                                                <option value="yearly" {{ old('billing_cycle', $business->billing_cycle) === 'yearly' ? 'selected' : '' }}>Yearly Billing</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="trial_ends_at" class="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">Trial Ends At</label>
+                                            <input type="datetime-local" name="trial_ends_at" id="trial_ends_at"
+                                                   value="{{ old('trial_ends_at', $business->trial_ends_at ? $business->trial_ends_at->format('Y-m-d\TH:i') : '') }}"
+                                                   class="w-full text-xs rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 p-2.5">
+                                        </div>
+
+                                        <div>
+                                            <label for="subscription_ends_at" class="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">Paid Subscription Ends At</label>
+                                            <input type="datetime-local" name="subscription_ends_at" id="subscription_ends_at"
+                                                   value="{{ old('subscription_ends_at', $business->subscription_ends_at ? $business->subscription_ends_at->format('Y-m-d\TH:i') : '') }}"
+                                                   class="w-full text-xs rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 p-2.5">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endif
 

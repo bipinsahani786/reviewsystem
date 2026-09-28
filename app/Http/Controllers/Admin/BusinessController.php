@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Business;
+use App\Models\IndustryPreset;
 use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -42,13 +43,24 @@ class BusinessController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * Non-super-admin users are limited to ONE business.
      */
     public function create(): View
     {
-        $users = Auth::user()->isSuperAdmin() ? User::orderBy('name')->get() : null;
-        $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
+        $user = Auth::user();
 
-        return view('admin.businesses.create', compact('users', 'plans'));
+        // If non-super-admin already owns a business, show professional limit reached & upgrade page
+        if (! $user->isSuperAdmin() && $user->businesses()->exists()) {
+            $existing = $user->businesses()->with('plan')->first();
+
+            return view('admin.businesses.limit-reached', compact('existing'));
+        }
+
+        $users = $user->isSuperAdmin() ? User::orderBy('name')->get() : null;
+        $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
+        $industryPresets = IndustryPreset::where('is_active', true)->orderBy('sort_order')->get();
+
+        return view('admin.businesses.create', compact('users', 'plans', 'industryPresets'));
     }
 
     /**
@@ -57,6 +69,12 @@ class BusinessController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = Auth::user();
+
+        // Double-check: non-super-admin can only have 1 business
+        if (! $user->isSuperAdmin() && $user->businesses()->exists()) {
+            return redirect()->route('admin.businesses.index')
+                ->with('error', 'You can only manage one business. Please edit your existing business.');
+        }
 
         $request->merge([
             'slug' => $request->filled('slug')
@@ -74,6 +92,7 @@ class BusinessController extends Controller
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'owner_user_id' => [$user->isSuperAdmin() ? 'required' : 'nullable', 'exists:users,id'],
             'plan_id' => ['nullable', 'exists:plans,id'],
+            'industry_preset_id' => ['nullable', 'exists:industry_presets,id'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -86,6 +105,29 @@ class BusinessController extends Controller
             ? (int) $validated['owner_user_id']
             : $user->id;
 
+        // Automatically assign selected plan or default signup plan
+        $plan = ! empty($validated['plan_id'])
+            ? Plan::find($validated['plan_id'])
+            : Plan::getDefaultPlan();
+
+        $trialDays = $plan ? $plan->trial_days : 14;
+        $billingCycle = $plan ? ($plan->billing_period ?? 'monthly') : 'monthly';
+
+        $subscriptionStatus = 'trial';
+        $trialEndsAt = now()->addDays($trialDays);
+        $subscriptionEndsAt = null;
+
+        if ($user->isSuperAdmin()) {
+            if ($request->input('subscription_status') === 'active') {
+                $subscriptionStatus = 'active';
+                $trialEndsAt = null;
+                $subscriptionEndsAt = now()->addMonth();
+            } elseif ($request->filled('trial_days')) {
+                $trialDays = (int) $request->input('trial_days');
+                $trialEndsAt = now()->addDays($trialDays);
+            }
+        }
+
         $business = Business::create([
             'name' => $validated['name'],
             'slug' => $validated['slug'],
@@ -95,26 +137,43 @@ class BusinessController extends Controller
             'language_preference' => $validated['language_preference'] ?? 'hinglish',
             'logo' => $logoPath,
             'owner_user_id' => $ownerId,
-            'plan_id' => ! empty($validated['plan_id']) ? (int) $validated['plan_id'] : null,
+            'plan_id' => $plan?->id,
+            'subscription_status' => $subscriptionStatus,
+            'trial_ends_at' => $trialEndsAt,
+            'subscription_ends_at' => $subscriptionEndsAt,
+            'billing_cycle' => $billingCycle,
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        // Seed initial standard tags for immediate usability
-        $defaultTags = [
-            ['label' => 'Superb Quality', 'category' => 'taste', 'sort_order' => 1],
-            ['label' => 'Fast & Prompt Service', 'category' => 'service', 'sort_order' => 2],
-            ['label' => 'Courteous & Polite Staff', 'category' => 'service', 'sort_order' => 3],
-            ['label' => 'Great Ambience & Cleanliness', 'category' => 'ambience', 'sort_order' => 4],
-            ['label' => 'Total Value for Money', 'category' => 'value', 'sort_order' => 5],
-            ['label' => 'Highly Recommended', 'category' => 'service', 'sort_order' => 6],
-        ];
+        // Seed tags: Use selected Industry Preset if provided, otherwise default tags
+        $presetId = $request->input('industry_preset_id');
+        $industryPreset = $presetId ? IndustryPreset::find($presetId) : null;
 
-        foreach ($defaultTags as $tag) {
-            $business->tags()->create($tag);
+        if ($industryPreset && is_array($industryPreset->tags) && count($industryPreset->tags) > 0) {
+            $seedTags = $industryPreset->tags;
+        } else {
+            $seedTags = [
+                ['label' => 'Superb Quality', 'category' => 'taste'],
+                ['label' => 'Fast & Prompt Service', 'category' => 'service'],
+                ['label' => 'Courteous & Polite Staff', 'category' => 'service'],
+                ['label' => 'Great Ambience & Cleanliness', 'category' => 'ambience'],
+                ['label' => 'Total Value for Money', 'category' => 'value'],
+                ['label' => 'Highly Recommended', 'category' => 'service'],
+            ];
+        }
+
+        $sortOrder = 0;
+        foreach ($seedTags as $tag) {
+            $sortOrder++;
+            $business->tags()->create([
+                'label' => $tag['label'],
+                'category' => $tag['category'] ?? 'service',
+                'sort_order' => $sortOrder,
+            ]);
         }
 
         return redirect()->route('admin.businesses.show', $business)
-            ->with('success', "Business '{$business->name}' created successfully with starter tags!");
+            ->with('success', "Business '{$business->name}' created successfully with starter tags and {$trialDays}-day free trial!");
     }
 
     /**
@@ -123,7 +182,7 @@ class BusinessController extends Controller
     public function show(Business $business): View
     {
         $business = $this->getAuthorizedBusiness($business);
-        $business->load(['tags', 'reviews' => function ($q) {
+        $business->load(['plan', 'tags', 'reviews' => function ($q) {
             $q->latest()->take(10);
         }]);
 
@@ -164,6 +223,8 @@ class BusinessController extends Controller
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'owner_user_id' => [$user->isSuperAdmin() ? 'required' : 'nullable', 'exists:users,id'],
             'plan_id' => ['nullable', 'exists:plans,id'],
+            'subscription_status' => ['nullable', Rule::in(['trial', 'active', 'expired', 'cancelled'])],
+            'billing_cycle' => ['nullable', Rule::in(['monthly', 'yearly'])],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -191,14 +252,71 @@ class BusinessController extends Controller
             $business->plan_id = ! empty($validated['plan_id']) ? (int) $validated['plan_id'] : null;
         }
 
-        if ($user->isSuperAdmin() && ! empty($validated['owner_user_id'])) {
-            $business->owner_user_id = (int) $validated['owner_user_id'];
+        if ($user->isSuperAdmin()) {
+            if (! empty($validated['owner_user_id'])) {
+                $business->owner_user_id = (int) $validated['owner_user_id'];
+            }
+            if ($request->filled('subscription_status')) {
+                $business->subscription_status = $request->input('subscription_status');
+            }
+            if ($request->filled('billing_cycle')) {
+                $business->billing_cycle = $request->input('billing_cycle');
+            }
+            if ($request->filled('trial_ends_at')) {
+                $business->trial_ends_at = $request->input('trial_ends_at');
+            }
+            if ($request->filled('subscription_ends_at')) {
+                $business->subscription_ends_at = $request->input('subscription_ends_at');
+            }
         }
 
         $business->save();
 
         return redirect()->route('admin.businesses.show', $business)
             ->with('success', "Business '{$business->name}' updated successfully!");
+    }
+
+    /**
+     * Extend trial period for a business (Super Admin only).
+     */
+    public function extendTrial(Request $request, Business $business): RedirectResponse
+    {
+        $this->authorizeSuperAdmin();
+        $days = (int) $request->input('days', 14);
+
+        $currentTrialEnd = ($business->trial_ends_at && $business->trial_ends_at->isFuture())
+            ? $business->trial_ends_at
+            : now();
+
+        $business->update([
+            'subscription_status' => 'trial',
+            'trial_ends_at' => $currentTrialEnd->copy()->addDays($days),
+        ]);
+
+        return back()->with('success', "Trial for '{$business->name}' extended by {$days} days!");
+    }
+
+    /**
+     * Activate subscription for a business (Super Admin only).
+     */
+    public function activateSubscription(Request $request, Business $business): RedirectResponse
+    {
+        $this->authorizeSuperAdmin();
+        $months = (int) $request->input('months', 1);
+
+        $business->update([
+            'subscription_status' => 'active',
+            'subscription_ends_at' => now()->addMonths($months),
+        ]);
+
+        return back()->with('success', "Subscription for '{$business->name}' activated for {$months} month(s)!");
+    }
+
+    protected function authorizeSuperAdmin(): void
+    {
+        if (! Auth::user()->isSuperAdmin()) {
+            abort(403, 'Unauthorized action. Super admin access required.');
+        }
     }
 
     /**

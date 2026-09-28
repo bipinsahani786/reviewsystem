@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Business;
+use App\Models\IndustryPreset;
 use App\Models\ReviewTag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,8 +21,9 @@ class ReviewTagController extends Controller
     {
         $business = $this->getAuthorizedBusiness($business);
         $tags = $business->tags()->orderBy('sort_order')->orderBy('id')->get();
+        $industryPresets = IndustryPreset::where('is_active', true)->orderBy('sort_order')->get();
 
-        return view('admin.tags.index', compact('business', 'tags'));
+        return view('admin.tags.index', compact('business', 'tags', 'industryPresets'));
     }
 
     /**
@@ -50,60 +52,50 @@ class ReviewTagController extends Controller
     }
 
     /**
-     * Bulk install preset tags by category / business type.
+     * Bulk install preset tags by category / business type from database presets.
      */
     public function bulkPresets(Request $request, Business $business): RedirectResponse
     {
         $business = $this->getAuthorizedBusiness($business);
 
-        $preset = $request->input('preset_type', 'restaurant');
+        $presetId = $request->input('preset_id');
+        $presetType = $request->input('preset_type');
+        $mode = $request->input('mode', 'append'); // 'append' or 'replace'
+        $selectedLabels = $request->input('selected_tags', []); // optional selective array of labels
 
-        $presets = [
-            'restaurant' => [
-                ['label' => 'Mouthwatering Taste', 'category' => 'taste'],
-                ['label' => 'Fresh & Hygienic Food', 'category' => 'taste'],
-                ['label' => 'Quick Table Service', 'category' => 'service'],
-                ['label' => 'Polite & Warm Staff', 'category' => 'service'],
-                ['label' => 'Cozy & Vibrant Vibe', 'category' => 'ambience'],
-                ['label' => 'Affordable & Value for Money', 'category' => 'value'],
-                ['label' => 'Must-Try Signature Dishes', 'category' => 'taste'],
-            ],
-            'cafe' => [
-                ['label' => 'Awesome Coffee & Drinks', 'category' => 'taste'],
-                ['label' => 'Chill & Aesthetic Ambience', 'category' => 'ambience'],
-                ['label' => 'Friendly Baristas', 'category' => 'service'],
-                ['label' => 'Great Work & Study Spot', 'category' => 'ambience'],
-                ['label' => 'Delicious Snacks & Desserts', 'category' => 'taste'],
-                ['label' => 'Fair Pricing', 'category' => 'value'],
-            ],
-            'salon' => [
-                ['label' => 'Expert Hair Styling', 'category' => 'service'],
-                ['label' => 'Very Clean & Sanitized', 'category' => 'ambience'],
-                ['label' => 'Skilled & Gentle Staff', 'category' => 'service'],
-                ['label' => 'Relaxing Atmosphere', 'category' => 'ambience'],
-                ['label' => 'Top Quality Products Used', 'category' => 'value'],
-                ['label' => 'Punctual & No Waiting', 'category' => 'service'],
-            ],
-            'retail' => [
-                ['label' => 'Huge Variety of Products', 'category' => 'value'],
-                ['label' => 'Genuine Quality Items', 'category' => 'value'],
-                ['label' => 'Helpful & Patient Staff', 'category' => 'service'],
-                ['label' => 'Reasonable & Best Prices', 'category' => 'value'],
-                ['label' => 'Hassle-free Billing', 'category' => 'service'],
-                ['label' => 'Clean & Well-Organized Store', 'category' => 'ambience'],
-            ],
-            'hotel' => [
-                ['label' => 'Spotless & Comfortable Rooms', 'category' => 'ambience'],
-                ['label' => 'Exceptional Hospitality', 'category' => 'service'],
-                ['label' => 'Delicious Breakfast Buffet', 'category' => 'taste'],
-                ['label' => 'Convenient Location', 'category' => 'value'],
-                ['label' => 'Fast Check-in & Check-out', 'category' => 'service'],
-                ['label' => 'Peaceful Environment', 'category' => 'ambience'],
-            ],
-        ];
+        $preset = null;
+        if ($presetId) {
+            $preset = IndustryPreset::find($presetId);
+        }
 
-        $tagsToAdd = $presets[$preset] ?? $presets['restaurant'];
-        $maxSortOrder = $business->tags()->max('sort_order') ?? 0;
+        if (! $preset && $presetType) {
+            $preset = IndustryPreset::where('slug', $presetType)->first()
+                ?? IndustryPreset::where('name', 'like', "%{$presetType}%")->first();
+        }
+
+        if ($preset && is_array($preset->tags) && count($preset->tags) > 0) {
+            $tagsToAdd = $preset->tags;
+            $presetName = $preset->name;
+        } else {
+            // Fallback default presets if database record not found
+            $fallbackPresets = IndustryPreset::defaultPresets();
+            $matched = collect($fallbackPresets)->firstWhere('slug', $presetType) ?? $fallbackPresets[0];
+            $tagsToAdd = $matched['tags'];
+            $presetName = $matched['name'];
+        }
+
+        // If specific tags were selected, filter to those
+        if (! empty($selectedLabels) && is_array($selectedLabels)) {
+            $tagsToAdd = array_filter($tagsToAdd, fn ($t) => in_array($t['label'], $selectedLabels));
+        }
+
+        // If mode is 'replace', remove existing tags first
+        if ($mode === 'replace') {
+            $business->tags()->delete();
+            $maxSortOrder = 0;
+        } else {
+            $maxSortOrder = $business->tags()->max('sort_order') ?? 0;
+        }
 
         $addedCount = 0;
         foreach ($tagsToAdd as $tag) {
@@ -112,15 +104,17 @@ class ReviewTagController extends Controller
                 $maxSortOrder++;
                 $business->tags()->create([
                     'label' => $tag['label'],
-                    'category' => $tag['category'],
+                    'category' => $tag['category'] ?? 'service',
                     'sort_order' => $maxSortOrder,
                 ]);
                 $addedCount++;
             }
         }
 
+        $actionWord = $mode === 'replace' ? 'replaced with' : 'added from';
+
         return redirect()->route('admin.businesses.tags.index', $business)
-            ->with('success', "{$addedCount} preset tags added successfully for ".ucfirst($preset).'!');
+            ->with('success', "{$addedCount} tags {$actionWord} preset '{$presetName}' successfully!");
     }
 
     /**

@@ -23,34 +23,40 @@
                     </x-nav-link>
 
                     <x-nav-link :href="route('admin.businesses.index')" :active="request()->routeIs('admin.businesses.*')">
-                        {{ __('Businesses') }}
+                        {{ Auth::user()->isSuperAdmin() ? __('Businesses') : __('My Business') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('admin.leads.index')" :active="request()->routeIs('admin.leads.*')" class="relative">
-                        {{ __('Leads') }}
-                        @php $unreadLeads = \App\Models\Lead::where('status', 'new')->count(); @endphp
-                        @if($unreadLeads > 0)
-                            <span class="ml-1.5 px-1.5 py-0.5 text-[10px] font-extrabold bg-emerald-600 text-white rounded-full">
-                                {{ $unreadLeads }}
-                            </span>
-                        @endif
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('admin.plans.index')" :active="request()->routeIs('admin.plans.*')">
-                        {{ __('Pricing Plans') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('admin.testimonials.index')" :active="request()->routeIs('admin.testimonials.*')">
-                        {{ __('Testimonials') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
-                        {{ __('Site Settings') }}
+                    <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.*')">
+                        {{ __('Billing & Plans') }}
                     </x-nav-link>
 
                     <x-nav-link :href="route('admin.analytics.index')" :active="request()->routeIs('admin.analytics.*')">
                         {{ __('Analytics') }}
                     </x-nav-link>
+
+                    @if(Auth::user()->isSuperAdmin())
+                        <x-nav-link :href="route('admin.plans.index')" :active="request()->routeIs('admin.plans.*')">
+                            {{ __('Pricing Plans') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('admin.leads.index')" :active="request()->routeIs('admin.leads.*')" class="relative">
+                            {{ __('Leads') }}
+                            @php $unreadLeads = \App\Models\Lead::where('status', 'new')->count(); @endphp
+                            @if($unreadLeads > 0)
+                                <span class="ml-1.5 px-1.5 py-0.5 text-[10px] font-extrabold bg-emerald-600 text-white rounded-full">
+                                    {{ $unreadLeads }}
+                                </span>
+                            @endif
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('admin.testimonials.index')" :active="request()->routeIs('admin.testimonials.*')">
+                            {{ __('Testimonials') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
+                            {{ __('Site Settings') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -113,34 +119,40 @@
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('admin.businesses.index')" :active="request()->routeIs('admin.businesses.*')">
-                {{ __('Businesses') }}
+                {{ Auth::user()->isSuperAdmin() ? __('Businesses') : __('My Business') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('admin.leads.index')" :active="request()->routeIs('admin.leads.*')">
-                {{ __('Leads') }}
-                @php $unreadLeads = \App\Models\Lead::where('status', 'new')->count(); @endphp
-                @if($unreadLeads > 0)
-                    <span class="ml-2 px-1.5 py-0.5 text-[10px] font-extrabold bg-emerald-600 text-white rounded-full">
-                        {{ $unreadLeads }} New
-                    </span>
-                @endif
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link :href="route('admin.plans.index')" :active="request()->routeIs('admin.plans.*')">
-                {{ __('Pricing Plans') }}
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link :href="route('admin.testimonials.index')" :active="request()->routeIs('admin.testimonials.*')">
-                {{ __('Testimonials') }}
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
-                {{ __('Site Settings') }}
+            <x-responsive-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.*')">
+                {{ __('Billing & Plans') }}
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('admin.analytics.index')" :active="request()->routeIs('admin.analytics.*')">
                 {{ __('Analytics') }}
             </x-responsive-nav-link>
+
+            @if(Auth::user()->isSuperAdmin())
+                <x-responsive-nav-link :href="route('admin.plans.index')" :active="request()->routeIs('admin.plans.*')">
+                    {{ __('Pricing Plans') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.leads.index')" :active="request()->routeIs('admin.leads.*')">
+                    {{ __('Leads') }}
+                    @php $unreadLeads = \App\Models\Lead::where('status', 'new')->count(); @endphp
+                    @if($unreadLeads > 0)
+                        <span class="ml-2 px-1.5 py-0.5 text-[10px] font-extrabold bg-emerald-600 text-white rounded-full">
+                            {{ $unreadLeads }} New
+                        </span>
+                    @endif
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.testimonials.index')" :active="request()->routeIs('admin.testimonials.*')">
+                    {{ __('Testimonials') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
+                    {{ __('Site Settings') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

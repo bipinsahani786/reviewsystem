@@ -28,7 +28,7 @@
                     @csrf
                     @method('PUT')
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label class="block text-xs font-bold text-zinc-700 mb-1.5">Plan Display Name</label>
                             <input type="text" name="name" value="{{ old('name', $plan->name) }}" required
@@ -36,7 +36,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Monthly Price (Amount)</label>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Price (Amount)</label>
                             <div class="flex items-center">
                                 <span class="px-3 py-2.5 bg-zinc-100 border border-r-0 border-zinc-300 rounded-l-lg text-xs font-bold text-zinc-600">
                                     {{ $plan->currency }}
@@ -45,33 +45,65 @@
                                        class="w-full text-xs px-3.5 py-2.5 rounded-r-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                             </div>
                         </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Discounted Yearly Price (Optional)</label>
+                            <div class="flex items-center">
+                                <span class="px-3 py-2.5 bg-zinc-100 border border-r-0 border-zinc-300 rounded-l-lg text-xs font-bold text-zinc-600">
+                                    {{ $plan->currency }}
+                                </span>
+                                <input type="number" step="1" name="yearly_price" value="{{ old('yearly_price', $plan->yearly_price) }}" placeholder="e.g. 9588"
+                                       class="w-full text-xs px-3.5 py-2.5 rounded-r-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Billing Period Cycle</label>
+                            <select name="billing_period" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+                                <option value="monthly" {{ old('billing_period', $plan->billing_period) === 'monthly' ? 'selected' : '' }}>Monthly Cycle</option>
+                                <option value="yearly" {{ old('billing_period', $plan->billing_period) === 'yearly' ? 'selected' : '' }}>Yearly / Annual Cycle</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Free Trial Duration</label>
+                            <div class="flex items-center">
+                                <input type="number" name="trial_days" min="0" max="365" value="{{ old('trial_days', $plan->trial_days ?? 14) }}" required
+                                       class="w-full text-xs px-3.5 py-2.5 rounded-l-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="px-3 py-2.5 bg-zinc-100 border border-l-0 border-zinc-300 rounded-r-lg text-xs font-bold text-zinc-600">
+                                    Days
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Billing Suffix Label</label>
+                            <input type="text" name="billing_cycle" value="{{ old('billing_cycle', $plan->billing_cycle) }}" required
+                                   class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. / month">
+                        </div>
+
                         <div>
                             <label class="block text-xs font-bold text-zinc-700 mb-1.5">Currency Symbol</label>
                             <input type="text" name="currency" value="{{ old('currency', $plan->currency) }}" required
                                    class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         </div>
+                    </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Billing Cycle Suffix</label>
-                            <input type="text" name="billing_cycle" value="{{ old('billing_cycle', $plan->billing_cycle) }}" required
-                                   class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        </div>
-
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-xs font-bold text-zinc-700 mb-1.5">Promotional Badge (Optional)</label>
                             <input type="text" name="badge" value="{{ old('badge', $plan->badge) }}" placeholder="e.g. Most Popular"
                                    class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-zinc-700 mb-1.5">Target Audience Tagline</label>
-                        <input type="text" name="tagline" value="{{ old('tagline', $plan->tagline) }}"
-                               class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                               placeholder="e.g. Up to 3 Locations + Private Shield">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Target Audience Tagline</label>
+                            <input type="text" name="tagline" value="{{ old('tagline', $plan->tagline) }}"
+                                   class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                   placeholder="e.g. Up to 3 Locations + Private Shield">
+                        </div>
                     </div>
 
                     <div>
@@ -93,7 +125,7 @@
                         <span class="text-[11px] text-zinc-400 mt-1 block">Each line will become a bullet point with a green checkmark on the pricing cards.</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-2">
                         <div>
                             <label class="block text-xs font-bold text-zinc-700 mb-1.5">Display Sort Order</label>
                             <input type="number" name="sort_order" value="{{ old('sort_order', $plan->sort_order) }}" required
@@ -104,7 +136,18 @@
                             <label class="inline-flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', $plan->is_active) ? 'checked' : '' }}
                                        class="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                <span class="text-xs font-bold text-zinc-800">Plan is Active &amp; Visible on Pricing Page</span>
+                                <span class="text-xs font-bold text-zinc-800">Plan is Active &amp; Visible</span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center pt-6">
+                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="is_default" value="1" {{ old('is_default', $plan->is_default) ? 'checked' : '' }}
+                                       class="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                <div>
+                                    <span class="text-xs font-bold text-zinc-800">Default Signup Plan</span>
+                                    <span class="block text-[10px] text-zinc-400">Assigned automatically to new users for free trial</span>
+                                </div>
                             </label>
                         </div>
                     </div>

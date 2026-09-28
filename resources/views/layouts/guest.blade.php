@@ -72,36 +72,79 @@
                 justify-content: space-between !important;
                 padding: clamp(1.5rem, 3.5vh, 2.75rem) clamp(1.5rem, 3vw, 3rem) !important;
                 scrollbar-width: thin;
+                background: #ffffff;
+                border-left: 1px solid #e4e4e7;
+            }
+            .auth-form-inner {
+                width: 100%;
+                max-width: 23rem;
             }
         }
 
-        /* ─── Mobile / Tablet (<= 900px): responsive natural scrolling ─── */
+        /* ─── Mobile / Tablet (<= 900px): clean card layout with natural scrolling ─── */
         @media (max-width: 900px) {
             html, body {
                 min-height: 100vh;
+                min-height: 100dvh;
+                overflow-x: hidden !important;
                 overflow-y: auto !important;
+                background: #f8fafc !important;
             }
             .auth-shell {
                 min-height: 100vh;
-                display: block;
+                min-height: 100dvh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                background: #f8fafc;
+                padding: 1rem .75rem 1.5rem;
             }
             .auth-brand-panel {
                 display: none !important;
             }
             .auth-form-panel {
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 2rem 1.25rem;
+                width: 100%;
+                max-width: 26rem;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                padding: 0 !important;
+                background: transparent !important;
+                border: none !important;
+            }
+            .auth-form-inner {
+                width: 100%;
+                background: #ffffff;
+                border-radius: 1.5rem;
+                padding: 1.75rem 1.35rem;
+                box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+                border: 1px solid #e2e8f0;
+                margin: .75rem 0 !important;
+            }
+            .field-input {
+                font-size: 16px !important; /* CRITICAL: Prevents iOS Safari auto-zoom on tap */
+                padding: .8125rem 1rem !important;
+                border-radius: .75rem !important;
+            }
+            .btn-submit {
+                min-height: 48px !important;
+                font-size: .95rem !important;
+                border-radius: .75rem !important;
+            }
+            .desktop-only-nav {
+                display: none !important;
+            }
+            .mobile-header-bar {
+                display: flex !important;
             }
         }
 
-        /* ── Left brand panel styling ── */
+        /* ── Left brand panel styling (Desktop) ── */
         .auth-brand-panel {
-            background: #121214;
-            color: #ffffff;
+            background: #121214 !important;
+            color: #ffffff !important;
             position: relative;
             overflow: hidden;
             border-right: 1px solid #27272a;
@@ -109,21 +152,17 @@
         .auth-brand-panel::before {
             content: '';
             position: absolute;
-            width: 480px; height: 480px;
+            width: 480px;
+            height: 480px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(5,150,105,.18) 0%, transparent 70%);
-            top: -120px; right: -120px;
+            background: radial-gradient(circle, rgba(5,150,105,.22) 0%, transparent 70%);
+            top: -120px;
+            right: -120px;
             pointer-events: none;
         }
-
-        /* ── Right form panel styling ── */
-        .auth-form-panel {
-            background: #ffffff;
-            border-left: 1px solid #e4e4e7;
-        }
-        .auth-form-inner {
-            width: 100%;
-            max-width: 23rem;
+        .auth-brand-panel > * {
+            position: relative;
+            z-index: 1;
         }
 
         /* ── Form fields ── */
@@ -312,21 +351,32 @@
     <div class="auth-form-panel">
         
         {{-- Top utility bar on right panel (Desktop & Mobile) --}}
-        <div style="width:100%;max-width:23.5rem;display:flex;align-items:center;justify-content:space-between;min-height:2.25rem;">
-            {{-- Mobile-only logo --}}
-            <div style="display:none;align-items:center;gap:.625rem;" class="mobile-logo">
+        <div style="width:100%;max-width:26rem;display:flex;align-items:center;justify-content:space-between;min-height:2.5rem;">
+            {{-- Mobile-only Brand Header --}}
+            <div style="display:none;align-items:center;gap:.625rem;" class="mobile-header-bar">
                 <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:.625rem;text-decoration:none;">
                     @if($guestLogo)
                         <img src="{{ $guestLogo }}" alt="{{ $guestBrandName }}" style="height:2rem;width:auto;max-width:8rem;object-fit:contain;">
                     @else
-                        <div style="width:2rem;height:2rem;border-radius:.5rem;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;">★</div>
-                        <span style="font-size:1.05rem;font-weight:800;color:#18181b;">{{ $guestBrandName }}</span>
+                        <div style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;box-shadow:0 2px 6px rgba(5,150,105,.35);">★</div>
+                        <div>
+                            <span style="font-size:1.05rem;font-weight:800;color:#0f172a;letter-spacing:-.02em;display:block;line-height:1.15;">{{ $guestBrandName }}</span>
+                            <span style="font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">Merchant Portal</span>
+                        </div>
                     @endif
                 </a>
             </div>
 
+            {{-- Mobile Right Quick Home Link --}}
+            <div style="display:none;align-items:center;gap:.5rem;" class="mobile-header-bar">
+                <a href="{{ route('home') }}" style="font-size:.78rem;font-weight:600;color:#64748b;text-decoration:none;padding:.35rem .65rem;border-radius:.5rem;background:#ffffff;border:1px solid #e2e8f0;display:inline-flex;align-items:center;gap:.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+                    <span>&larr;</span>
+                    <span>Home</span>
+                </a>
+            </div>
+
             {{-- Desktop Top Utility Navigation --}}
-            <div style="margin-left:auto;display:flex;align-items:center;gap:.75rem;font-size:.8125rem;">
+            <div class="desktop-only-nav" style="margin-left:auto;display:flex;align-items:center;gap:.75rem;font-size:.8125rem;">
                 <a href="{{ route('home') }}" style="font-weight:500;color:#71717a;text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .55rem;border-radius:.375rem;transition:all .15s;" onmouseover="this.style.color='#18181b';this.style.background='#f4f4f5'" onmouseout="this.style.color='#71717a';this.style.background='transparent'">
                     <span>&larr;</span>
                     <span>Website</span>
@@ -347,16 +397,16 @@
         </div>
 
         {{-- Centered Form Box --}}
-        <div class="auth-form-inner" style="margin:auto 0;padding-block:.75rem;">
+        <div class="auth-form-inner">
             {{ $slot }}
         </div>
 
         {{-- Bottom Trust footer --}}
-        <div style="width:100%;max-width:23.5rem;">
-            <div class="trust-row" style="padding-top:.75rem;border-top:1px solid #f4f4f5;">
-                <span class="trust-chip"><span style="color:#059669;">✓</span> No credit card needed</span>
-                <span class="trust-chip"><span style="color:#059669;">✓</span> Google Policy Safe</span>
-                <span class="trust-chip"><span style="color:#059669;">✓</span> Cancel anytime</span>
+        <div style="width:100%;max-width:26rem;padding-top:.5rem;">
+            <div class="trust-row" style="padding-top:.75rem;border-top:1px solid #e2e8f0;">
+                <span class="trust-chip"><span style="color:#059669;">✓</span> 100% Policy Safe</span>
+                <span class="trust-chip"><span style="color:#059669;">✓</span> No Credit Card Needed</span>
+                <span class="trust-chip"><span style="color:#059669;">✓</span> 14-Day Free Trial</span>
             </div>
         </div>
 
@@ -365,10 +415,5 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<style>
-@media(max-width:900px){
-    .mobile-logo { display: flex !important; }
-}
-</style>
 </body>
 </html>
