@@ -19,6 +19,7 @@ class Plan extends Model
         'billing_cycle',
         'billing_period',
         'trial_days',
+        'max_businesses',
         'tagline',
         'description',
         'badge',
@@ -35,6 +36,7 @@ class Plan extends Model
         'price' => 'decimal:2',
         'yearly_price' => 'decimal:2',
         'trial_days' => 'integer',
+        'max_businesses' => 'integer',
         'sort_order' => 'integer',
     ];
 
@@ -52,6 +54,14 @@ class Plan extends Model
     public function getFormattedYearlyPriceAttribute(): ?string
     {
         return $this->yearly_price ? $this->currency.number_format($this->yearly_price, 0) : null;
+    }
+
+    /**
+     * Maximum business locations / outlets allowed on this plan.
+     */
+    public function maxBusinesses(): int
+    {
+        return $this->max_businesses ?: 1;
     }
 
     /**

@@ -116,6 +116,7 @@
                                 <form method="POST" action="{{ route('admin.businesses.activate-subscription', $business) }}">
                                     @csrf
                                     <input type="hidden" name="period" value="monthly">
+                                    <input type="hidden" name="months" value="1">
                                     <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
                                         Grant 1 Month Active
                                     </button>
@@ -124,6 +125,7 @@
                                 <form method="POST" action="{{ route('admin.businesses.activate-subscription', $business) }}">
                                     @csrf
                                     <input type="hidden" name="period" value="yearly">
+                                    <input type="hidden" name="months" value="12">
                                     <button type="submit" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
                                         Grant 1 Year Active
                                     </button>
@@ -161,9 +163,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     @foreach($plans as $plan)
                         @php
-                            $isCurrentPlan = $business && $business->plan_id === $plan->id && $business->hasActiveSubscription();
+                            $isCurrentPlan  = $business && $business->plan_id === $plan->id && ($business->hasActiveSubscription() || $business->isOnTrial());
+                            $isLowerPlan    = $plan->sort_order < $currentPlanSortOrder && !$isCurrentPlan;
+                            $isHigherPlan   = $plan->sort_order > $currentPlanSortOrder && !$isCurrentPlan;
                         @endphp
-                        <div class="bg-white rounded-3xl p-6 md:p-8 border {{ $plan->badge ? 'border-2 border-emerald-600 shadow-md relative' : 'border-slate-200 shadow-sm' }} flex flex-col justify-between">
+                        <div class="bg-white rounded-3xl p-6 md:p-8 border {{ $plan->badge ? 'border-2 border-emerald-600 shadow-md relative' : 'border-slate-200 shadow-sm' }} {{ $isLowerPlan ? 'opacity-55 grayscale' : '' }} flex flex-col justify-between">
                             @if($plan->badge)
                                 <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-sm">
                                     {{ $plan->badge }}
@@ -179,6 +183,10 @@
                                     @if($isCurrentPlan)
                                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200">
                                             Current Active
+                                        </span>
+                                    @elseif($isLowerPlan)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-400 border border-slate-200">
+                                            Lower Tier
                                         </span>
                                     @endif
                                 </div>
@@ -219,6 +227,10 @@
                                 @if($isCurrentPlan)
                                     <button disabled class="w-full py-3 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed text-center">
                                         ✓ Current Plan Active
+                                    </button>
+                                @elseif($isLowerPlan)
+                                    <button disabled class="w-full py-3 bg-slate-50 text-slate-300 font-bold text-xs rounded-xl cursor-not-allowed text-center border border-slate-100" title="You are already on a higher plan and cannot downgrade.">
+                                        ✗ Not Available (Lower Plan)
                                     </button>
                                 @else
                                     <button type="button"
@@ -326,14 +338,54 @@
                             <button type="button" @click="showPaymentModal = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
                         </div>
 
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
-                            <div class="flex justify-between text-xs text-slate-600">
-                                <span>Selected Cycle</span>
-                                <span class="font-bold text-slate-900 capitalize" x-text="annual ? 'Yearly Billing (17% Discount)' : 'Monthly Billing'"></span>
+                        <!-- Interactive Billing Cycle Selection inside Modal -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Select Billing Term</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <!-- Monthly Card -->
+                                <button type="button" @click="selectedCycle = 'monthly'"
+                                        class="p-3.5 rounded-2xl border-2 text-left transition-all relative cursor-pointer"
+                                        :class="selectedCycle === 'monthly' ? 'border-emerald-600 bg-emerald-50/70 shadow-xs ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-black text-slate-900">Monthly</span>
+                                        <span class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px]"
+                                              :class="selectedCycle === 'monthly' ? 'border-emerald-600 bg-emerald-600 text-white font-bold' : 'border-slate-300'">
+                                            <span x-show="selectedCycle === 'monthly'">✓</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-base font-black text-slate-900" x-text="'₹' + Number(selectedMonthlyPrice).toLocaleString('en-IN')"></div>
+                                    <div class="text-[10px] text-slate-500 mt-0.5">Billed monthly</div>
+                                </button>
+
+                                <!-- Yearly Card -->
+                                <button type="button" @click="selectedCycle = 'yearly'"
+                                        class="p-3.5 rounded-2xl border-2 text-left transition-all relative cursor-pointer"
+                                        :class="selectedCycle === 'yearly' ? 'border-emerald-600 bg-emerald-50/70 shadow-xs ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                    <span class="absolute -top-2.5 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-2xs">
+                                        Save ~20%
+                                    </span>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-black text-slate-900">Yearly Plan</span>
+                                        <span class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px]"
+                                              :class="selectedCycle === 'yearly' ? 'border-emerald-600 bg-emerald-600 text-white font-bold' : 'border-slate-300'">
+                                            <span x-show="selectedCycle === 'yearly'">✓</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-base font-black text-slate-900" x-text="'₹' + Number(selectedYearlyPrice).toLocaleString('en-IN')"></div>
+                                    <div class="text-[10px] text-emerald-700 font-semibold mt-0.5" x-text="'₹' + Math.round(selectedYearlyPrice / 12).toLocaleString('en-IN') + '/mo effective'"></div>
+                                </button>
                             </div>
-                            <div class="flex justify-between text-xs text-slate-600">
-                                <span>Total Payable</span>
-                                <span class="font-black text-slate-900 text-base" x-text="'₹' + Number(selectedPrice).toLocaleString('en-IN')"></span>
+                        </div>
+
+                        <!-- Summary of Total Payable -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                            <div>
+                                <div class="text-xs text-slate-500 font-medium">Total Amount Payable</div>
+                                <div class="text-[11px] text-slate-400" x-text="selectedCycle === 'yearly' ? '12 Months Access (365 Days)' : '1 Month Access (30 Days)'"></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-black text-slate-900" x-text="'₹' + Number(currentPayableAmount).toLocaleString('en-IN')"></div>
+                                <div class="text-[10px] font-bold text-emerald-600" x-show="selectedCycle === 'yearly'">Includes Annual Savings</div>
                             </div>
                         </div>
 
@@ -355,16 +407,16 @@
                                 <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-950 space-y-2">
                                     <div class="font-bold flex items-center gap-1.5 text-emerald-800">
                                         <span>⚡</span>
-                                        <span>Razorpay Sandbox Mode Active</span>
+                                        <span>Instant Simulation Mode</span>
                                     </div>
                                     <p class="text-[11px] text-emerald-800 leading-relaxed">
-                                        Razorpay keys are not yet added in <code>.env</code>. You can simulate instant payment right now to verify subscription upgrade and generate an official printable invoice.
+                                        Razorpay keys are not yet configured in <code>.env</code>. You can simulate instant payment right now to test subscription upgrade and invoice generation.
                                     </p>
                                 </div>
 
                                 <button type="button" @click="initiateSandboxPayment()" :disabled="isProcessing"
                                         class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
-                                    <span x-show="!isProcessing">⚡ Complete Instant Sandbox Payment</span>
+                                    <span x-show="!isProcessing">⚡ Complete Instant Upgrade (<span x-text="selectedCycle === 'yearly' ? '1 Year' : '1 Month'"></span>)</span>
                                     <span x-show="isProcessing">Activating Plan &amp; Generating Invoice...</span>
                                 </button>
                             </div>
@@ -405,7 +457,9 @@
                 annual: false,
                 selectedPlanId: null,
                 selectedPlanName: '',
-                selectedPrice: 0,
+                selectedMonthlyPrice: 0,
+                selectedYearlyPrice: 0,
+                selectedCycle: 'monthly',
                 showPaymentModal: false,
                 isProcessing: false,
                 paymentSuccess: false,
@@ -413,10 +467,16 @@
                 hasRazorpay: {{ $hasRazorpay ? 'true' : 'false' }},
                 businessId: {{ $business ? $business->id : 'null' }},
 
+                get currentPayableAmount() {
+                    return this.selectedCycle === 'yearly' ? Number(this.selectedYearlyPrice) : Number(this.selectedMonthlyPrice);
+                },
+
                 openUpgrade(id, name, price, yearlyPrice) {
                     this.selectedPlanId = Number(id);
                     this.selectedPlanName = name;
-                    this.selectedPrice = (this.annual && yearlyPrice) ? Number(yearlyPrice) : Number(price);
+                    this.selectedMonthlyPrice = Number(price);
+                    this.selectedYearlyPrice = (yearlyPrice && Number(yearlyPrice) > 0) ? Number(yearlyPrice) : (Number(price) * 12);
+                    this.selectedCycle = this.annual ? 'yearly' : 'monthly';
                     this.paymentSuccess = false;
                     this.isProcessing = false;
                     this.showPaymentModal = true;
@@ -428,7 +488,7 @@
                         return;
                     }
                     this.isProcessing = true;
-                    const cycle = this.annual ? 'yearly' : 'monthly';
+                    const cycle = this.selectedCycle;
                     const self = this;
 
                     fetch('{{ route('admin.billing.upgrade') }}', {
@@ -453,7 +513,7 @@
                                 "amount": data.amount,
                                 "currency": data.currency,
                                 "name": "{{ \App\Models\SiteSetting::brandName() }}",
-                                "description": "Subscription to " + data.plan_name,
+                                "description": "Subscription to " + data.plan_name + " (" + cycle + ")",
                                 "order_id": data.order_id,
                                 "handler": function (response) {
                                     self.isProcessing = true;
@@ -511,7 +571,7 @@
                         return;
                     }
                     this.isProcessing = true;
-                    const cycle = this.annual ? 'yearly' : 'monthly';
+                    const cycle = this.selectedCycle;
                     const mockPaymentId = 'pay_sbx_' + Date.now();
                     const mockOrderId = 'order_sbx_' + Date.now();
                     const self = this;

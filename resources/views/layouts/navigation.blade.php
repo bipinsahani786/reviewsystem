@@ -5,7 +5,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-2.5">
+                    <a href="{{ Auth::user()?->isAgent() && ! Auth::user()?->isSuperAdmin() ? route('agent.dashboard') : route('admin.dashboard') }}" class="flex items-center space-x-2.5">
                         <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
                             ★
                         </div>
@@ -18,21 +18,39 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-6 sm:-my-px sm:ms-8 sm:flex">
-                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
+                    @if(Auth::user()?->isAgent() && ! Auth::user()?->isSuperAdmin())
+                        <x-nav-link :href="route('agent.dashboard')" :active="request()->routeIs('agent.dashboard')">
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('admin.businesses.index')" :active="request()->routeIs('admin.businesses.*')">
-                        {{ Auth::user()->isSuperAdmin() ? __('Businesses') : __('My Business') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('agent.clients.index')" :active="request()->routeIs('agent.clients.*')">
+                            {{ __('My Clients') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.*')">
-                        {{ __('Billing & Plans') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('agent.payouts')" :active="request()->routeIs('agent.payouts')">
+                            {{ __('My Earnings') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('admin.analytics.index')" :active="request()->routeIs('admin.analytics.*')">
-                        {{ __('Analytics') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('agent.marketing')" :active="request()->routeIs('agent.marketing')">
+                            {{ __('Marketing Kit') }}
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('admin.businesses.index')" :active="request()->routeIs('admin.businesses.*')">
+                            {{ Auth::user()->isSuperAdmin() ? __('Businesses') : __('My Business') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.*')">
+                            {{ __('Billing & Plans') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('admin.analytics.index')" :active="request()->routeIs('admin.analytics.*')">
+                            {{ __('Analytics') }}
+                        </x-nav-link>
+                    @endif
 
                     @if(Auth::user()->isSuperAdmin())
                         <x-nav-link :href="route('admin.plans.index')" :active="request()->routeIs('admin.plans.*')">
@@ -60,15 +78,61 @@
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Subscription / Trial Days Remaining Badge (Header) -->
+            @php
+                $navUser = Auth::user();
+                $navBusiness = $navUser ? $navUser->businesses()->with('plan')->first() : null;
+            @endphp
+
+            <div class="hidden sm:flex sm:items-center sm:ms-auto gap-3">
+                @if($navUser?->isAgent() && ! $navUser?->isSuperAdmin())
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-violet-50 text-violet-800 border border-violet-200">
+                        <span class="w-2 h-2 rounded-full bg-violet-600 animate-pulse"></span>
+                        <span>Code: <strong class="font-mono">{{ $navUser->agent_code }}</strong></span>
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        ⚡ {{ number_format($navUser->commission_rate, 0) }}% Comm.
+                    </span>
+                @elseif($navBusiness)
+                    @if($navBusiness->isOnTrial())
+                        <a href="{{ route('admin.billing.index') }}" 
+                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200/90 hover:bg-amber-100 transition shadow-2xs" 
+                           title="Trial ends on {{ $navBusiness->trial_ends_at?->format('M d, Y') }}">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span>🎁 {{ $navBusiness->trialDaysRemaining() }} Days Trial Left</span>
+                            <span class="text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded-md ml-0.5">Upgrade</span>
+                        </a>
+                    @elseif($navBusiness->hasActiveSubscription())
+                        @php
+                            $daysLeft = $navBusiness->subscriptionDaysRemaining();
+                        @endphp
+                        <a href="{{ route('admin.billing.index') }}" 
+                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200/90 hover:bg-emerald-100 transition shadow-2xs"
+                           title="Active plan: {{ $navBusiness->plan?->name }} (Valid until {{ $navBusiness->subscription_ends_at?->format('M d, Y') }})">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>⚡ {{ $daysLeft }} Days Left</span>
+                            <span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-200/80 px-1.5 py-0.5 rounded-md ml-0.5">
+                                {{ $navBusiness->plan?->name ?? 'Active' }}
+                            </span>
+                        </a>
+                    @elseif($navBusiness->isExpired())
+                        <a href="{{ route('admin.billing.index') }}" 
+                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-900 border border-rose-300 hover:bg-rose-100 transition shadow-2xs">
+                            <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                            <span>⚠️ Plan Expired</span>
+                            <span class="text-[10px] font-extrabold text-white bg-rose-600 px-1.5 py-0.5 rounded-md ml-0.5">Renew</span>
+                        </a>
+                    @endif
+                @endif
+
+                <!-- Settings Dropdown -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
                             <div class="flex items-center space-x-1.5">
                                 <span>{{ Auth::user()->name }}</span>
                                 @if(Auth::user()->isSuperAdmin())
-                                    <span class="bg-purple-100 text-purple-700 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded">Reseller / Admin</span>
+                                    <span class="bg-purple-100 text-purple-700 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded">Super Admin</span>
                                 @endif
                             </div>
 
@@ -157,6 +221,39 @@
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
+            @if($navBusiness)
+                <div class="px-4 mb-3">
+                    @if($navBusiness->isOnTrial())
+                        <a href="{{ route('admin.billing.index') }}" class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>🎁 {{ $navBusiness->trialDaysRemaining() }} Days Trial Left</span>
+                            </span>
+                            <span class="text-[10px] font-extrabold text-amber-800 bg-amber-200 px-2 py-0.5 rounded-md">Upgrade &rarr;</span>
+                        </a>
+                    @elseif($navBusiness->hasActiveSubscription())
+                        @php
+                            $daysLeft = $navBusiness->subscriptionDaysRemaining();
+                        @endphp
+                        <a href="{{ route('admin.billing.index') }}" class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-bold">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>⚡ {{ $daysLeft }} Days Left ({{ $navBusiness->plan?->name }})</span>
+                            </span>
+                            <span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-200 px-2 py-0.5 rounded-md">Manage &rarr;</span>
+                        </a>
+                    @elseif($navBusiness->isExpired())
+                        <a href="{{ route('admin.billing.index') }}" class="flex items-center justify-between p-2.5 rounded-xl bg-rose-50 text-rose-900 border border-rose-300 text-xs font-bold">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                                <span>⚠️ Plan Expired</span>
+                            </span>
+                            <span class="text-[10px] font-extrabold text-white bg-rose-600 px-2 py-0.5 rounded-md">Renew Now &rarr;</span>
+                        </a>
+                    @endif
+                </div>
+            @endif
+
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>

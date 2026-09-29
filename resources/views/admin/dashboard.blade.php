@@ -22,7 +22,7 @@
                     <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     Telemetry
                 </a>
-                @if(auth()->user()->isSuperAdmin() || !auth()->user()->businesses()->exists())
+                @if(auth()->user()->canAddMoreBusinesses())
                 <a href="{{ route('admin.businesses.create') }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-xl text-xs font-bold text-white hover:bg-emerald-700 shadow-md shadow-emerald-500/20 transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     Add Business
@@ -236,15 +236,32 @@
             @else
                 <!-- Merchant Standard Metric Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <!-- Total Businesses -->
-                    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center space-x-4">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <!-- Plan Quota / Outlet Usage -->
+                    @php
+                        $mUsed = $merchantOwnedCount ?? 0;
+                        $mMax  = $merchantMaxAllowed ?? 1;
+                        $mPct  = $mMax > 0 ? min(100, round(($mUsed / $mMax) * 100)) : 100;
+                        $mPlan = $merchantCurrentPlan?->name ?? 'Starter';
+                    @endphp
+                    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Outlets Used</div>
+                                    <div class="text-2xl font-black text-slate-900 leading-tight">{{ $mUsed }} <span class="text-base font-semibold text-slate-400">/ {{ $mMax }}</span></div>
+                                </div>
+                            </div>
+                            @if($mUsed >= $mMax)
+                                <a href="{{ route('admin.billing.index') }}" class="text-[10px] font-extrabold text-white bg-rose-500 hover:bg-rose-600 px-2 py-1 rounded-lg transition">Upgrade</a>
+                            @endif
                         </div>
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Businesses</div>
-                            <div class="text-2xl font-black text-slate-900 mt-0.5">{{ number_format($totalBusinesses) }}</div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mb-1">
+                            <div class="h-1.5 rounded-full transition-all {{ $mPct >= 100 ? 'bg-rose-500' : ($mPct >= 75 ? 'bg-amber-500' : 'bg-blue-500') }}" style="width: {{ $mPct }}%"></div>
                         </div>
+                        <div class="text-[10px] text-slate-400 font-medium">{{ $mPlan }} Plan &bull; {{ $mMax - $mUsed }} slot{{ ($mMax - $mUsed) != 1 ? 's' : '' }} remaining</div>
                     </div>
 
                     <!-- Total Reviews Generated -->

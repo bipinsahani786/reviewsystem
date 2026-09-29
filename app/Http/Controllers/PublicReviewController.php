@@ -46,19 +46,19 @@ class PublicReviewController extends Controller
             'tags.*' => ['required', 'string', 'max:100'],
         ]);
 
-        $reviewText = $generator->generate(
+        $options = $generator->generateMultiple(
+            $business,
+            (int) $validated['rating'],
+            $validated['tags'],
+            3,
+            $request->ip()
+        );
+
+        $reviewText = $options[0] ?? $generator->generateFallbackReview(
             $business,
             (int) $validated['rating'],
             $validated['tags']
         );
-
-        if (empty($reviewText) || mb_strlen(trim($reviewText)) < 25) {
-            $reviewText = $generator->generateFallbackReview(
-                $business,
-                (int) $validated['rating'],
-                $validated['tags']
-            );
-        }
 
         $review = GeneratedReview::create([
             'business_id' => $business->id,
@@ -79,6 +79,7 @@ class PublicReviewController extends Controller
             'success' => true,
             'review_id' => $review->id,
             'review_text' => $reviewText,
+            'options' => $options,
             'google_url' => $business->google_review_url,
             'whatsapp_url' => $whatsappUrl,
         ]);

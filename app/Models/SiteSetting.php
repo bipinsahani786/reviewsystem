@@ -73,7 +73,7 @@ class SiteSetting extends Model
             return $logo;
         }
 
-        return asset('storage/' . ltrim($logo, '/'));
+        return asset('storage/'.ltrim($logo, '/'));
     }
 
     /**
@@ -90,6 +90,6 @@ class SiteSetting extends Model
             return $favicon;
         }
 
-        return asset('storage/' . ltrim($favicon, '/'));
+        return asset('storage/'.ltrim($favicon, '/'));
     }
 }

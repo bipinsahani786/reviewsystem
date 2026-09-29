@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAgent;
 use App\Http\Middleware\EnsureSuperAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'super_admin' => EnsureSuperAdmin::class,
+            'agent' => EnsureAgent::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             'razorpay/webhook',

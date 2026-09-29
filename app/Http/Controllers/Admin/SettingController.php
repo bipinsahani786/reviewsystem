@@ -70,7 +70,7 @@ class SettingController extends Controller
             SiteSetting::set('site_logo', null, 'branding');
         } elseif ($request->hasFile('site_logo_file')) {
             $logoFile = $request->file('site_logo_file');
-            $filename = 'logo_' . time() . '.' . $logoFile->getClientOriginalExtension();
+            $filename = 'logo_'.time().'.'.$logoFile->getClientOriginalExtension();
             $path = $logoFile->storeAs('branding', $filename, 'public');
             SiteSetting::set('site_logo', $path, 'branding');
         } elseif (! empty($validated['site_logo_url'])) {
@@ -82,7 +82,7 @@ class SettingController extends Controller
             SiteSetting::set('site_favicon', null, 'branding');
         } elseif ($request->hasFile('site_favicon_file')) {
             $faviconFile = $request->file('site_favicon_file');
-            $filename = 'favicon_' . time() . '.' . $faviconFile->getClientOriginalExtension();
+            $filename = 'favicon_'.time().'.'.$faviconFile->getClientOriginalExtension();
             $path = $faviconFile->storeAs('branding', $filename, 'public');
             SiteSetting::set('site_favicon', $path, 'branding');
         } elseif (! empty($validated['site_favicon_url'])) {

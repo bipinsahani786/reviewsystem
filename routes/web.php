@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AgentController;
+use App\Http\Controllers\Admin\AiLogController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\BusinessController;
@@ -15,10 +17,12 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Agent\AgentPortalController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicReviewController;
 use App\Models\Plan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Landing & Marketing Pages (No auth required)
@@ -199,6 +203,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('businesses/{business}/extend-trial', [BusinessController::class, 'extendTrial'])->name('businesses.extend-trial');
         Route::post('businesses/{business}/activate-subscription', [BusinessController::class, 'activateSubscription'])->name('businesses.activate-subscription');
 
+        // Agent Management (Sales Reps)
+        Route::resource('agents', AgentController::class)->except(['show']);
+        Route::get('agents/{agent}', [AgentController::class, 'show'])->name('agents.show');
+        Route::post('agents/{agent}/sales', [AgentController::class, 'recordSale'])->name('agents.record-sale');
+        Route::post('agents/{agent}/sales/{sale}/paid', [AgentController::class, 'markCommissionPaid'])->name('agents.commission-paid');
+
         // Testimonials Management
         Route::get('testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
         Route::get('testimonials/create', [TestimonialController::class, 'create'])->name('testimonials.create');
@@ -207,6 +217,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::put('testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
         Route::patch('testimonials/{testimonial}/toggle', [TestimonialController::class, 'toggle'])->name('testimonials.toggle');
         Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+
+        // AI Generation Logs & Telemetry
+        Route::get('ai-logs', [AiLogController::class, 'index'])->name('ai-logs.index');
+        Route::get('ai-logs/test', [AiLogController::class, 'testConnection'])->name('ai-logs.test');
+        Route::post('ai-logs/clear', [AiLogController::class, 'clear'])->name('ai-logs.clear');
     });
 });
 
@@ -220,8 +235,22 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Redirect default /dashboard to /admin
+// Agent Partner Portal Routes (Protected by auth and agent middleware)
+Route::middleware(['auth', 'agent'])->prefix('agent')->name('agent.')->group(function () {
+    Route::get('/', [AgentPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/clients', [AgentPortalController::class, 'clients'])->name('clients.index');
+    Route::get('/clients/create', [AgentPortalController::class, 'createClient'])->name('clients.create');
+    Route::post('/clients', [AgentPortalController::class, 'storeClient'])->name('clients.store');
+    Route::get('/payouts', [AgentPortalController::class, 'payouts'])->name('payouts');
+    Route::get('/marketing', [AgentPortalController::class, 'marketing'])->name('marketing');
+});
+
+// Redirect default /dashboard based on role
 Route::get('/dashboard', function () {
+    if (Auth::user()?->isAgent() && ! Auth::user()?->isSuperAdmin()) {
+        return redirect()->route('agent.dashboard');
+    }
+
     return redirect()->route('admin.dashboard');
 })->middleware('auth')->name('dashboard');
 

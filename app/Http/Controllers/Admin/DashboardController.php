@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\GeneratedReview;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -18,9 +19,13 @@ class DashboardController extends Controller
     /**
      * Show the admin dashboard with overview metrics.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
+        if ($user && $user->isAgent() && ! $user->isSuperAdmin()) {
+            return redirect()->route('agent.dashboard');
+        }
+
         $isSuperAdmin = $user && $user->isSuperAdmin();
 
         $businessesQuery = $this->getAuthorizedBusinessesQuery();
@@ -97,6 +102,11 @@ class DashboardController extends Controller
             $recentTransactions = Transaction::with(['business', 'plan', 'user'])->latest()->take(5)->get();
         }
 
+        // Merchant plan usage data
+        $merchantOwnedCount = $isSuperAdmin ? null : $user->businesses()->count();
+        $merchantMaxAllowed = $isSuperAdmin ? null : $user->maxBusinessesAllowed();
+        $merchantCurrentPlan = $isSuperAdmin ? null : $user->currentPlan();
+
         return view('admin.dashboard', compact(
             'totalBusinesses',
             'totalReviews',
@@ -115,7 +125,10 @@ class DashboardController extends Controller
             'thisMonthRevenue',
             'estimatedMrr',
             'recentUsers',
-            'recentTransactions'
+            'recentTransactions',
+            'merchantOwnedCount',
+            'merchantMaxAllowed',
+            'merchantCurrentPlan'
         ));
     }
 }

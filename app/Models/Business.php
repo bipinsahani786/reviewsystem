@@ -89,7 +89,7 @@ class Business extends Model
             return 0;
         }
 
-        return max(0, (int) ceil(now()->floatDiffInDays($this->trial_ends_at, false)));
+        return max(0, (int) round(now()->floatDiffInDays($this->trial_ends_at, false)));
     }
 
     /**
@@ -101,7 +101,7 @@ class Business extends Model
             return 0;
         }
 
-        return max(0, (int) ceil(now()->floatDiffInDays($this->subscription_ends_at, false)));
+        return max(0, (int) round(now()->floatDiffInDays($this->subscription_ends_at, false)));
     }
 
     public function owner(): BelongsTo

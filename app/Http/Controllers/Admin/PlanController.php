@@ -52,6 +52,7 @@ class PlanController extends Controller
             'billing_cycle' => ['required', 'string', 'max:50'],
             'billing_period' => ['required', 'in:monthly,yearly'],
             'trial_days' => ['required', 'integer', 'min:0', 'max:365'],
+            'max_businesses' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'tagline' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
             'badge' => ['nullable', 'string', 'max:50'],
@@ -114,6 +115,7 @@ class PlanController extends Controller
             'billing_cycle' => ['required', 'string', 'max:50'],
             'billing_period' => ['nullable', 'in:monthly,yearly'],
             'trial_days' => ['nullable', 'integer', 'min:0', 'max:365'],
+            'max_businesses' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'tagline' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
             'badge' => ['nullable', 'string', 'max:50'],
@@ -125,6 +127,7 @@ class PlanController extends Controller
 
         $validated['billing_period'] = $validated['billing_period'] ?? ($plan->billing_period ?? 'monthly');
         $validated['trial_days'] = isset($validated['trial_days']) ? (int) $validated['trial_days'] : ($plan->trial_days ?? 14);
+        $validated['max_businesses'] = isset($validated['max_businesses']) ? (int) $validated['max_businesses'] : ($plan->max_businesses ?? 1);
 
         // Process features from textarea lines into clean array
         if (isset($validated['features'])) {

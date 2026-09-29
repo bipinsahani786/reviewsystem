@@ -45,8 +45,15 @@ class IndustryPresetController extends Controller
     {
         $categories = IndustryPreset::whereNotNull('category_name')->distinct()->pluck('category_name');
         $suggestedEmojis = ['🍽️', '☕', '✂️', '🛍️', '🏨', '🏥', '🏋️', '🚗', '🏡', '🎓', '⚖️', '📸', '🍕', '💇‍♀️', '💅', '🦷', '🩺', '🧘', '💻', '📱', '🐾', '🌿', '🛠️', '🚚'];
+        $defaultTags = [
+            ['label' => 'Experienced & Friendly Staff', 'category' => 'service'],
+            ['label' => 'Top Notch Hygiene & Sanitization', 'category' => 'ambience'],
+            ['label' => 'Prompt & No Waiting Time', 'category' => 'service'],
+            ['label' => 'Fair & Transparent Pricing', 'category' => 'value'],
+            ['label' => 'State of the Art Quality', 'category' => 'taste'],
+        ];
 
-        return view('admin.industry-presets.create', compact('categories', 'suggestedEmojis'));
+        return view('admin.industry-presets.create', compact('categories', 'suggestedEmojis', 'defaultTags'));
     }
 
     /**

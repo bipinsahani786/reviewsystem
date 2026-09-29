@@ -49,18 +49,27 @@ class BusinessController extends Controller
     {
         $user = Auth::user();
 
-        // If non-super-admin already owns a business, show professional limit reached & upgrade page
-        if (! $user->isSuperAdmin() && $user->businesses()->exists()) {
+        // If non-super-admin has reached their plan limit, show limit reached & upgrade page
+        if (! $user->canAddMoreBusinesses()) {
             $existing = $user->businesses()->with('plan')->first();
+            $ownedCount = $user->businesses()->count();
+            $maxAllowed = $user->maxBusinessesAllowed();
+            $currentPlan = $user->currentPlan();
 
-            return view('admin.businesses.limit-reached', compact('existing'));
+            return view('admin.businesses.limit-reached', compact('existing', 'ownedCount', 'maxAllowed', 'currentPlan'));
         }
 
         $users = $user->isSuperAdmin() ? User::orderBy('name')->get() : null;
-        $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
+        // Plans only shown to super admin — merchants cannot choose their own plan
+        $plans = $user->isSuperAdmin() ? Plan::where('is_active', true)->orderBy('sort_order')->get() : collect();
         $industryPresets = IndustryPreset::where('is_active', true)->orderBy('sort_order')->get();
 
-        return view('admin.businesses.create', compact('users', 'plans', 'industryPresets'));
+        // Pass plan usage info for merchants
+        $ownedCount = $user->isSuperAdmin() ? null : $user->businesses()->count();
+        $maxAllowed = $user->isSuperAdmin() ? null : $user->maxBusinessesAllowed();
+        $currentPlan = $user->isSuperAdmin() ? null : $user->currentPlan();
+
+        return view('admin.businesses.create', compact('users', 'plans', 'industryPresets', 'ownedCount', 'maxAllowed', 'currentPlan'));
     }
 
     /**
@@ -70,10 +79,12 @@ class BusinessController extends Controller
     {
         $user = Auth::user();
 
-        // Double-check: non-super-admin can only have 1 business
-        if (! $user->isSuperAdmin() && $user->businesses()->exists()) {
+        // Double-check: non-super-admin can only create as many businesses as permitted by their active plan
+        if (! $user->canAddMoreBusinesses()) {
+            $limit = $user->maxBusinessesAllowed();
+
             return redirect()->route('admin.businesses.index')
-                ->with('error', 'You can only manage one business. Please edit your existing business.');
+                ->with('error', "You have reached your plan limit of {$limit} business location(s). Please upgrade your subscription to add more outlets.");
         }
 
         $request->merge([
@@ -116,6 +127,18 @@ class BusinessController extends Controller
         $subscriptionStatus = 'trial';
         $trialEndsAt = now()->addDays($trialDays);
         $subscriptionEndsAt = null;
+
+        // If the owner already has an active paid subscription on another outlet, inherit that active plan & validity!
+        $owner = User::find($ownerId);
+        $activeExistingBusiness = $owner ? $owner->businesses()->where('subscription_status', 'active')->first() : null;
+
+        if ($activeExistingBusiness && ! $user->isSuperAdmin()) {
+            $plan = $activeExistingBusiness->plan ?? $plan;
+            $subscriptionStatus = 'active';
+            $trialEndsAt = null;
+            $subscriptionEndsAt = $activeExistingBusiness->subscription_ends_at;
+            $billingCycle = $activeExistingBusiness->billing_cycle;
+        }
 
         if ($user->isSuperAdmin()) {
             if ($request->input('subscription_status') === 'active') {
@@ -302,14 +325,42 @@ class BusinessController extends Controller
     public function activateSubscription(Request $request, Business $business): RedirectResponse
     {
         $this->authorizeSuperAdmin();
-        $months = (int) $request->input('months', 1);
+
+        $period = $request->input('period');
+        $monthsInput = (int) $request->input('months');
+        $isYearly = $period === 'yearly' || $period === 'year' || $monthsInput === 12;
+
+        if ($isYearly) {
+            $subscriptionEndsAt = now()->addYear();
+            $cycle = 'yearly';
+            $message = "Subscription for '{$business->name}' activated for 1 Year (365 days)!";
+        } else {
+            $months = max(1, $monthsInput > 0 ? $monthsInput : 1);
+            $subscriptionEndsAt = now()->addMonths($months);
+            $cycle = 'monthly';
+            $message = "Subscription for '{$business->name}' activated for {$months} month(s)!";
+        }
 
         $business->update([
             'subscription_status' => 'active',
-            'subscription_ends_at' => now()->addMonths($months),
+            'subscription_ends_at' => $subscriptionEndsAt,
+            'trial_ends_at' => null,
+            'billing_cycle' => $cycle,
         ]);
 
-        return back()->with('success', "Subscription for '{$business->name}' activated for {$months} month(s)!");
+        // Also sync subscription across all other outlets owned by this user
+        if ($business->owner_user_id) {
+            Business::where('owner_user_id', $business->owner_user_id)
+                ->where('id', '!=', $business->id)
+                ->update([
+                    'subscription_status' => 'active',
+                    'subscription_ends_at' => $subscriptionEndsAt,
+                    'trial_ends_at' => null,
+                    'billing_cycle' => $cycle,
+                ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     protected function authorizeSuperAdmin(): void

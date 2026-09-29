@@ -44,7 +44,21 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
-{
-    // ..
+use App\Models\Business;
+
+if (! function_exists('createTestBusiness')) {
+    function createTestBusiness(int $ownerId, array $overrides = []): Business
+    {
+        return Business::create(array_merge([
+            'name' => 'Test Business '.uniqid(),
+            'slug' => 'test-biz-'.uniqid(),
+            'google_place_id' => 'ChIJ_Test_'.uniqid(),
+            'owner_user_id' => $ownerId,
+            'theme_color' => '#10B981',
+            'language_preference' => 'hinglish',
+            'subscription_status' => 'trial',
+            'trial_ends_at' => now()->addDays(14),
+            'is_active' => true,
+        ], $overrides));
+    }
 }

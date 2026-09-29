@@ -31,10 +31,10 @@
                         </div>
                         <div>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 mb-1">
-                                Single Location Policy Active
+                                Outlet Limit Reached: {{ $ownedCount ?? 1 }} of {{ $maxAllowed ?? 1 }} Used
                             </span>
                             <h3 class="text-xl font-black text-slate-900">
-                                You Already Have an Active Business Profile
+                                You Have Reached Your Plan's Location Limit
                             </h3>
                         </div>
                     </div>
@@ -42,7 +42,7 @@
 
                 {{-- Explanation --}}
                 <p class="text-sm text-slate-600 leading-relaxed">
-                    Under the <strong class="text-slate-900">{{ $existing->plan?->name ?? 'Starter Plan' }}</strong>, each merchant account is dedicated to managing <strong>1 Google Business Profile</strong> and QR standee. You can easily modify all details of your existing business or upgrade to a multi-location plan.
+                    Under your active <strong class="text-slate-900">{{ $currentPlan?->name ?? ($existing->plan?->name ?? 'Starter Plan') }}</strong>, you are allowed up to <strong>{{ $maxAllowed ?? 1 }} business location(s)</strong> (currently using {{ $ownedCount ?? 1 }}). To add more branches and generate independent counter QR standees for each location, upgrade your subscription below.
                 </p>
 
                 {{-- Current Business Details Box --}}

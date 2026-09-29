@@ -127,14 +127,17 @@
                     <!-- Super Admin: Assign to Client Owner -->
                     @if(isset($users) && $users->count() > 0)
                         <div class="pt-4 border-t border-slate-100">
-                            <label for="owner_user_id" class="block text-xs font-bold uppercase tracking-wider text-purple-700 mb-1">Reseller: Account Owner</label>
+                            <label for="owner_user_id" class="block text-xs font-bold uppercase tracking-wider text-purple-700 mb-1">
+                                Business Owner (Client User Account)
+                            </label>
                             <select name="owner_user_id" id="owner_user_id" class="w-full text-sm rounded-xl border-purple-200 focus:border-purple-500 focus:ring-purple-500 p-3">
                                 @foreach($users as $u)
                                     <option value="{{ $u->id }}" {{ (old('owner_user_id', $business->owner_user_id) == $u->id) ? 'selected' : '' }}>
-                                        {{ $u->name }} ({{ $u->email }})
+                                        {{ $u->name }} ({{ $u->email }}) {{ $u->isSuperAdmin() ? '— Super Admin' : '— Merchant' }}
                                     </option>
                                 @endforeach
                             </select>
+                            <p class="text-[11px] text-slate-400 mt-1">Change which merchant account owns and accesses this business store.</p>
                         </div>
                     @endif
 

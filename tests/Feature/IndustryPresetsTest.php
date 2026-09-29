@@ -17,6 +17,14 @@ test('super admin can access industry presets index and view existing presets', 
     $response->assertSee('Hospital, Clinic & Dental');
 });
 
+test('super admin can view industry presets create page', function () {
+    $superAdmin = User::factory()->create(['is_super_admin' => true]);
+
+    $response = $this->actingAs($superAdmin)->get(route('admin.industry-presets.create'));
+    $response->assertStatus(200);
+    $response->assertSee('Save Industry Preset');
+});
+
 test('non-super admin cannot access industry presets management', function () {
     $merchant = User::factory()->create(['is_super_admin' => false]);
 

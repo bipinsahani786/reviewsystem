@@ -193,7 +193,7 @@
     <script>
         function presetEditHandler() {
             return {
-                selectedEmoji: '{{ old('icon', $preset->icon) }}',
+                selectedEmoji: @json(old('icon', $preset->icon ?? '⭐')),
                 tags: @json(old('tags', $preset->tags ?? [])),
 
                 addTag() {

@@ -5,10 +5,24 @@
         </div>
         <h2 style="font-size:clamp(1.25rem, 5vw, 1.5rem);font-weight:800;color:#0f172a;letter-spacing:-.02em;margin:0 0 .25rem;line-height:1.2;">Start your free trial</h2>
         <p style="font-size:.8125rem;color:#64748b;margin:0;line-height:1.45;">Join 1,200+ businesses collecting 5-star Google reviews</p>
+
+        @if(!empty($agent))
+            <div style="margin-top:.75rem;padding:.5rem .75rem;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;display:flex;align-items:center;gap:.5rem;">
+                <span style="font-size:1rem;">🤝</span>
+                <div>
+                    <div style="font-size:.6875rem;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.03em;">Verified Field Partner Referral</div>
+                    <div style="font-size:.75rem;font-weight:600;color:#4c1d95;">Referred by {{ $agent->name }} ({{ $agent->agent_code }})</div>
+                </div>
+            </div>
+        @endif
     </div>
 
     <form method="POST" action="{{ route('register') }}" style="display:flex;flex-direction:column;gap:.875rem;">
         @csrf
+
+        @if(!empty($agent) || request('ref') || session('agent_ref'))
+            <input type="hidden" name="ref" value="{{ $agent?->agent_code ?? request('ref', session('agent_ref')) }}">
+        @endif
 
         {{-- Name --}}
         <div>

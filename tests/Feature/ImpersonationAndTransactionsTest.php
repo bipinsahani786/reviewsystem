@@ -5,21 +5,6 @@ use App\Models\Plan;
 use App\Models\Transaction;
 use App\Models\User;
 
-function createTestBusiness(int $ownerId, array $overrides = []): Business
-{
-    return Business::create(array_merge([
-        'name' => 'Test Business '.uniqid(),
-        'slug' => 'test-biz-'.uniqid(),
-        'google_place_id' => 'ChIJ_Test_'.uniqid(),
-        'owner_user_id' => $ownerId,
-        'theme_color' => '#10B981',
-        'language_preference' => 'hinglish',
-        'subscription_status' => 'trial',
-        'trial_ends_at' => now()->addDays(14),
-        'is_active' => true,
-    ], $overrides));
-}
-
 test('super admin can impersonate merchant and leave impersonation back to super admin', function () {
     $superAdmin = User::factory()->create(['is_super_admin' => true]);
     $merchant = User::factory()->create(['is_super_admin' => false]);

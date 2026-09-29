@@ -18,9 +18,19 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('auth.register');
+        $agent = null;
+        if ($request->filled('ref')) {
+            $agent = User::where('agent_code', trim($request->ref))->where('is_agent', true)->first();
+            if ($agent) {
+                session(['agent_ref' => $agent->agent_code]);
+            }
+        } elseif (session()->has('agent_ref')) {
+            $agent = User::where('agent_code', session('agent_ref'))->where('is_agent', true)->first();
+        }
+
+        return view('auth.register', compact('agent'));
     }
 
     /**
@@ -36,10 +46,18 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $refCode = $request->input('ref', session('agent_ref'));
+        $agentId = null;
+        if ($refCode) {
+            $agent = User::where('agent_code', trim($refCode))->where('is_agent', true)->first();
+            $agentId = $agent?->id;
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'agent_id' => $agentId,
         ]);
 
         event(new Registered($user));

@@ -1,6 +1,6 @@
 <div class="flex items-center justify-between gap-3">
     <div class="flex items-center space-x-2.5 min-w-0">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl {{ Auth::user()?->isAgent() && !Auth::user()?->isSuperAdmin() ? 'bg-gradient-to-tr from-violet-600 to-purple-500' : 'bg-gradient-to-tr from-emerald-600 to-teal-500' }} text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm flex-shrink-0">
             {{ substr(Auth::user()->name ?? 'A', 0, 1) }}
         </div>
         <div class="min-w-0 flex-1">
@@ -8,7 +8,13 @@
                 {{ Auth::user()->name }}
             </div>
             <div class="text-[10px] text-slate-400 truncate">
-                {{ Auth::user()->isSuperAdmin() ? 'Super Admin' : 'Merchant' }}
+                @if(Auth::user()?->isSuperAdmin())
+                    Super Admin
+                @elseif(Auth::user()?->isAgent())
+                    Sales Agent Partner
+                @else
+                    Merchant
+                @endif
             </div>
         </div>
     </div>

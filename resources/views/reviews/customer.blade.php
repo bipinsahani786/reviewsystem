@@ -18,7 +18,7 @@
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
     @endif
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
         }
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            background: #0b1120;
+            background: #090e17;
             color: #0f172a;
             min-height: 100vh;
             overflow-x: hidden;
@@ -48,99 +48,86 @@
             inset: 0;
             z-index: 0;
             background: 
-                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.28) 0%, transparent 45%),
-                radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.22) 0%, transparent 40%),
-                radial-gradient(circle at 50% 85%, rgba(37, 99, 235, 0.25) 0%, transparent 50%),
-                #080d1a;
+                radial-gradient(circle at 20% 15%, rgba(37, 99, 235, 0.22) 0%, transparent 45%),
+                radial-gradient(circle at 80% 25%, rgba(245, 158, 11, 0.16) 0%, transparent 40%),
+                radial-gradient(circle at 50% 85%, rgba(99, 102, 241, 0.18) 0%, transparent 50%),
+                #070b14;
             pointer-events: none;
         }
-        .ambient-mesh::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.02' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.8;
+
+        /* Pure Invisible Scrollbars - Eliminates desktop scrollbar tracks & arrows */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
         }
 
-        /* Sleek Card Surface */
+        /* Sleek Modern Card Surface */
         .app-surface {
             background: #ffffff;
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 70px -15px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
 
-        /* Custom Scrollbar for Tags Cloud */
-        .custom-tag-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 transparent;
-        }
-        .custom-tag-scroll::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        .custom-tag-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-tag-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
-        .custom-tag-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        /* Tag Chip Interactive Styling */
+        /* Modern Tag Chip Styling */
         .tag-pill {
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
             cursor: pointer;
         }
+        .tag-pill:hover {
+            transform: translateY(-1px);
+        }
         .tag-pill:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
         }
         .tag-pill.active {
             background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
             color: #ffffff !important;
             border-color: transparent !important;
-            box-shadow: 0 8px 20px -3px rgba(37, 99, 235, 0.45);
-            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 18px -3px rgba(37, 99, 235, 0.45);
+            transform: translateY(-2px) scale(1.02);
         }
         .tag-pill.active .check-indicator {
             display: inline-flex !important;
         }
 
-        /* Star Bounce & Glow */
+        /* Interactive Stars */
         .star-touch-btn {
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
         }
         .star-touch-btn:hover {
-            transform: scale(1.22);
-            filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6));
+            transform: scale(1.18);
+            filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
         }
         .star-touch-btn:active {
-            transform: scale(0.9);
+            transform: scale(0.92);
         }
 
-        /* Pulsing Post Hero Button */
+        /* Hero Pulse Button */
         @keyframes hero-pulse {
             0%, 100% {
-                box-shadow: 0 10px 30px -4px rgba(37, 99, 235, 0.5);
+                box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.5);
                 transform: scale(1);
             }
             50% {
-                box-shadow: 0 18px 45px -2px rgba(37, 99, 235, 0.75);
-                transform: scale(1.02);
+                box-shadow: 0 16px 36px -2px rgba(37, 99, 235, 0.75);
+                transform: scale(1.015);
             }
         }
         .hero-pulse-btn {
-            animation: hero-pulse 2.4s infinite ease-in-out;
+            animation: hero-pulse 2.6s infinite ease-in-out;
         }
 
-        /* Step Transitions */
+        /* Smooth Step Views */
         .step-view {
-            transition: opacity 0.25s ease, transform 0.25s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
-        /* Canvas Confetti */
+        /* Pure Canvas Confetti */
         #confettiCanvas {
             position: fixed;
             inset: 0;
@@ -149,7 +136,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-center items-center p-2 sm:p-4 selection:bg-blue-200 relative">
+<body class="min-h-screen flex flex-col justify-center items-center p-3 sm:p-5 selection:bg-blue-100 relative">
 
     <div class="ambient-mesh"></div>
     <canvas id="confettiCanvas"></canvas>
@@ -158,7 +145,7 @@
     <div class="relative z-10 w-full max-w-md my-auto">
 
         <!-- Outer App Surface Card -->
-        <div class="app-surface rounded-[32px] sm:rounded-[40px] overflow-hidden flex flex-col border border-white/20">
+        <div class="app-surface rounded-[32px] sm:rounded-[36px] overflow-hidden flex flex-col border border-white/10">
 
             <!-- ═══════════ BRAND HEADER ═══════════ -->
             <header class="bg-gradient-to-b from-slate-50/90 to-white px-5 pt-4 pb-3 border-b border-slate-100 relative">
@@ -188,14 +175,12 @@
                         @endif
 
                         <div class="min-w-0">
-                            <div class="flex items-center space-x-1.5">
-                                <h1 class="text-sm font-black text-slate-900 truncate leading-tight">{{ $business->name }}</h1>
-                            </div>
+                            <h1 class="text-sm font-black text-slate-900 truncate leading-tight">{{ $business->name }}</h1>
                             <div class="flex items-center space-x-1.5 text-[11px] text-slate-500 font-semibold mt-0.5">
                                 <div class="flex items-center text-amber-500">
                                     <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                 </div>
-                                <span class="text-slate-800 font-extrabold">5.0 Rating</span>
+                                <span class="text-slate-800 font-extrabold">5.0</span>
                                 <span class="text-slate-300">&bull;</span>
                                 <span class="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-md text-[10px]">Google Verified</span>
                             </div>
@@ -203,7 +188,7 @@
                     </div>
 
                     <!-- Official Google Badge -->
-                    <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
+                    <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200/90 shadow-2xs">
                         <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -215,25 +200,15 @@
 
                 </div>
 
-                <!-- 3-Segment Story Progress Bars -->
-                <div class="mt-3.5 flex items-center space-x-2">
-                    <div class="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                        <div id="bar1" class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 w-full"></div>
-                    </div>
-                    <div class="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                        <div id="bar2" class="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 w-0"></div>
-                    </div>
-                    <div class="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                        <div id="bar3" class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 w-0"></div>
-                    </div>
-                </div>
-
-                <!-- Step Subtitle Pill -->
-                <div class="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1.5 px-0.5">
-                    <span id="stepLabelText">Step 1 of 3: Rate Experience</span>
-                    <span class="text-emerald-600 flex items-center space-x-1.5 font-bold">
+                <!-- 2-Step Modern Indicator -->
+                <div class="mt-3 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-t border-slate-100 pt-2 px-0.5">
+                    <span id="stepLabelText" class="flex items-center space-x-1.5 text-blue-600">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        <span>Step 1: Choose Highlights</span>
+                    </span>
+                    <span class="text-emerald-600 flex items-center space-x-1 font-bold">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Google Verified Flow</span>
+                        <span>Instant AI Flow</span>
                     </span>
                 </div>
 
@@ -241,105 +216,88 @@
 
 
             <!-- ═══════════ MAIN CONTENT BODY ═══════════ -->
-            <main class="p-5 sm:p-6 flex-1 flex flex-col justify-between min-h-[460px]">
+            <main class="p-5 flex-1 flex flex-col justify-between min-h-[460px]">
 
-                <!-- ═══════════ STEP 1: EXPERIENCE & STARS ═══════════ -->
-                <section id="step1" class="step-view space-y-6 my-auto">
+                <!-- ═══════════ STEP 1: RATE & CHOOSE HIGHLIGHTS (ALL-IN-ONE SIMPLE FLOW) ═══════════ -->
+                <section id="step1" class="step-view space-y-4">
                     
-                    <div class="text-center pt-2">
-                        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-wider mb-2.5 border border-blue-100">
-                            <span>✨</span>
-                            <span>Share Your Feedback</span>
+                    <!-- 1. Star Rating Section -->
+                    <div class="bg-gradient-to-b from-slate-50/80 to-white rounded-2xl p-4 border border-slate-200/70 text-center space-y-2">
+                        <div class="text-xs font-black text-slate-900 tracking-tight">
+                            How was your visit with <span class="text-blue-600">{{ $business->name }}</span>?
                         </div>
-                        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                            How was your visit?
-                        </h2>
-                        <p class="text-xs text-slate-500 mt-1.5 max-w-xs mx-auto">
-                            Tap a star to rate your overall experience with <span class="font-bold text-slate-700">{{ $business->name }}</span>
-                        </p>
-                    </div>
 
-                    <!-- Glowing Star Pedestal -->
-                    <div class="relative bg-gradient-to-b from-slate-50 via-white to-amber-50/20 rounded-3xl p-6 border border-slate-200/80 shadow-inner text-center space-y-5">
-                        
                         <!-- 5 Large Interactive Stars -->
-                        <div class="flex justify-center items-center space-x-2.5 py-1" id="starContainer">
+                        <div class="flex justify-center items-center space-x-2 py-0.5" id="starContainer">
                             @for($i = 1; $i <= 5; $i++)
                                 <button type="button" 
                                         onclick="selectRating({{ $i }})" 
                                         class="star-touch-btn p-1 cursor-pointer focus:outline-none" 
                                         data-rating="{{ $i }}"
                                         aria-label="Rate {{ $i }} stars">
-                                    <svg class="w-12 h-12 sm:w-14 sm:h-14 text-amber-400 drop-shadow-sm transition-all duration-200 fill-current" viewBox="0 0 24 24">
+                                    <svg class="w-10 h-10 sm:w-11 sm:h-11 text-amber-400 drop-shadow-xs transition-all duration-200 fill-current" viewBox="0 0 24 24">
                                         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                                     </svg>
                                 </button>
                             @endfor
                         </div>
 
-                        <!-- Live Emotional Reaction Pill -->
-                        <div class="text-center">
-                            <div id="ratingBox" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs font-black shadow-xs transition-all">
-                                <span id="ratingEmoji" class="text-xl">🤩</span>
-                                <span id="ratingCaption">Outstanding Experience! ⭐⭐⭐⭐⭐</span>
+                        <!-- Emotional Reaction Pill -->
+                        <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-extrabold shadow-2xs transition-all" id="ratingBox">
+                            <span id="ratingEmoji" class="text-sm">🤩</span>
+                            <span id="ratingCaption">Outstanding Experience! ⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Highlights Picker -->
+                    <div class="space-y-3 pt-1">
+                        <div class="flex items-center justify-between px-0.5">
+                            <div>
+                                <h2 class="text-sm font-black text-slate-900 leading-tight">
+                                    What did you love most?
+                                </h2>
+                                <p class="text-[11px] text-slate-400 font-semibold mt-0.5">
+                                    Tap highlights below — AI will draft a natural review!
+                                </p>
                             </div>
+                            <span class="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-100">
+                                ⚡ Tap to pick
+                            </span>
                         </div>
 
-                        <p class="text-[11px] text-slate-400 font-semibold">
-                            Tap any star to change your rating anytime
-                        </p>
+                        <!-- Category Filter Tabs (Zero Scrollbars) -->
+                        @php
+                            $categories = $tagsByCategory->keys()->all();
+                        @endphp
+                        @if(count($categories) > 1)
+                            <div class="flex items-center space-x-1.5 overflow-x-auto py-1 no-scrollbar text-xs font-bold">
+                                <button type="button" onclick="filterCategoryTab('all', this)" class="cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-2xs whitespace-nowrap cursor-pointer">
+                                    All
+                                </button>
+                                @foreach($categories as $cat)
+                                    @php
+                                        $catEmoji = match(strtolower($cat)) {
+                                            'taste', 'food' => '🍽️',
+                                            'service' => '⚡',
+                                            'staff', 'courtesy' => '🤝',
+                                            'ambience', 'hygiene' => '🌿',
+                                            'value', 'pricing' => '💰',
+                                            default => '✨',
+                                        };
+                                    @endphp
+                                    <button type="button" onclick="filterCategoryTab('cat-{{ Str::slug($cat) }}', this)" class="cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-2xs whitespace-nowrap cursor-pointer">
+                                        {{ $catEmoji }} {{ $cat }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
 
-                    </div>
-
-                    <!-- Continue CTA Button -->
-                    <div class="pt-2">
-                        <button type="button" 
-                                id="toStep2Btn"
-                                onclick="goToStep(2)" 
-                                class="w-full py-4 px-6 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-98">
-                            <span>Continue to Highlights</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                        </button>
-                    </div>
-
-                </section>
-
-
-                <!-- ═══════════ STEP 2: HIGHLIGHTS & VIBES ═══════════ -->
-                <section id="step2" class="step-view hidden space-y-4">
-                    
-                    <!-- Back & Indicator -->
-                    <div class="flex items-center justify-between">
-                        <button type="button" onclick="goToStep(1)" class="text-xs text-slate-500 hover:text-slate-900 font-bold flex items-center py-1 cursor-pointer">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                            Back
-                        </button>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-black uppercase tracking-wider border border-blue-200/60">
-                            🏷️ Pick Highlights
-                        </span>
-                    </div>
-
-                    <div class="text-center">
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                            What stood out most?
-                        </h2>
-                        <p class="text-xs text-slate-500 mt-1">
-                            Tap 1 or more highlights you loved — AI will write a natural review!
-                        </p>
-                    </div>
-
-                    <!-- Category Filter Tabs -->
-                    @php
-                        $categories = $tagsByCategory->keys()->all();
-                    @endphp
-                    @if(count($categories) > 1)
-                        <div class="flex items-center space-x-1.5 overflow-x-auto py-1 px-0.5 no-scrollbar text-xs font-bold">
-                            <button type="button" onclick="filterCategoryTab('all', this)" class="cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-2xs whitespace-nowrap">
-                                All
-                            </button>
-                            @foreach($categories as $cat)
+                        <!-- Tag Chips Container (Clean & Responsive with Invisible Scrollbar) -->
+                        <div class="space-y-3.5 max-h-[260px] overflow-y-auto no-scrollbar pr-0.5">
+                            @forelse($tagsByCategory as $category => $tags)
                                 @php
-                                    $catEmoji = match(strtolower($cat)) {
+                                    $catSlug = 'cat-' . Str::slug($category);
+                                    $catEmoji = match(strtolower($category)) {
                                         'taste', 'food' => '🍽️',
                                         'service' => '⚡',
                                         'staff', 'courtesy' => '🤝',
@@ -348,106 +306,89 @@
                                         default => '✨',
                                     };
                                 @endphp
-                                <button type="button" onclick="filterCategoryTab('cat-{{ Str::slug($cat) }}', this)" class="cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-2xs whitespace-nowrap">
-                                    {{ $catEmoji }} {{ $cat }}
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
+                                <div class="category-group {{ $catSlug }}">
+                                    @if(count($categories) > 1)
+                                        <div class="flex items-center space-x-1 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-0.5">
+                                            <span>{{ $catEmoji }}</span>
+                                            <span>{{ $category }}</span>
+                                        </div>
+                                    @endif
 
-                    <!-- Tag Cloud Container with Sleek Scrollbar -->
-                    <div class="custom-tag-scroll space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                        @forelse($tagsByCategory as $category => $tags)
-                            @php
-                                $catSlug = 'cat-' . Str::slug($category);
-                                $catEmoji = match(strtolower($category)) {
-                                    'taste', 'food' => '🍽️',
-                                    'service' => '⚡',
-                                    'staff', 'courtesy' => '🤝',
-                                    'ambience', 'hygiene' => '🌿',
-                                    'value', 'pricing' => '💰',
-                                    default => '✨',
-                                };
-                            @endphp
-                            <div class="category-group {{ $catSlug }}">
-                                <div class="flex items-center space-x-1.5 text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                                    <span>{{ $catEmoji }}</span>
-                                    <span>{{ $category }}</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($tags as $tag)
+                                            @php
+                                                $tagEmoji = match(true) {
+                                                    str_contains(strtolower($tag->label), 'chicken') => '🍗',
+                                                    str_contains(strtolower($tag->label), 'naan') || str_contains(strtolower($tag->label), 'bread') => '🫓',
+                                                    str_contains(strtolower($tag->label), 'coffee') || str_contains(strtolower($tag->label), 'drink') => '☕',
+                                                    str_contains(strtolower($tag->label), 'fast') || str_contains(strtolower($tag->label), 'speed') => '⚡',
+                                                    str_contains(strtolower($tag->label), 'polite') || str_contains(strtolower($tag->label), 'friendly') => '🤝',
+                                                    str_contains(strtolower($tag->label), 'clean') || str_contains(strtolower($tag->label), 'hygienic') => '✨',
+                                                    str_contains(strtolower($tag->label), 'cozy') || str_contains(strtolower($tag->label), 'chill') || str_contains(strtolower($tag->label), 'vibe') => '🌿',
+                                                    str_contains(strtolower($tag->label), 'value') || str_contains(strtolower($tag->label), 'price') || str_contains(strtolower($tag->label), 'pocket') => '💰',
+                                                    default => '•'
+                                                };
+                                            @endphp
+                                            <button type="button"
+                                                    onclick="toggleTag(this, '{{ addslashes($tag->label) }}')"
+                                                    class="tag-pill px-3.5 py-2.5 rounded-2xl text-xs font-bold border border-slate-200/90 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center space-x-1.5 shadow-2xs">
+                                                <span class="check-indicator hidden text-white text-[11px] font-black">✓</span>
+                                                <span>{{ $tagEmoji }}</span>
+                                                <span>{{ $tag->label }}</span>
+                                            </button>
+                                        @endforeach
+                                    </div>
                                 </div>
-
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($tags as $tag)
-                                        @php
-                                            $tagEmoji = match(true) {
-                                                str_contains(strtolower($tag->label), 'chicken') => '🍗',
-                                                str_contains(strtolower($tag->label), 'naan') || str_contains(strtolower($tag->label), 'bread') => '🫓',
-                                                str_contains(strtolower($tag->label), 'coffee') || str_contains(strtolower($tag->label), 'drink') => '☕',
-                                                str_contains(strtolower($tag->label), 'fast') || str_contains(strtolower($tag->label), 'speed') => '⚡',
-                                                str_contains(strtolower($tag->label), 'polite') || str_contains(strtolower($tag->label), 'friendly') => '🤝',
-                                                str_contains(strtolower($tag->label), 'clean') || str_contains(strtolower($tag->label), 'hygienic') => '✨',
-                                                str_contains(strtolower($tag->label), 'cozy') || str_contains(strtolower($tag->label), 'chill') || str_contains(strtolower($tag->label), 'vibe') => '🌿',
-                                                str_contains(strtolower($tag->label), 'value') || str_contains(strtolower($tag->label), 'price') || str_contains(strtolower($tag->label), 'pocket') => '💰',
-                                                default => '•'
-                                            };
-                                        @endphp
-                                        <button type="button"
-                                                onclick="toggleTag(this, '{{ addslashes($tag->label) }}')"
-                                                class="tag-pill px-3.5 py-2.5 rounded-2xl text-xs font-bold border border-slate-200/90 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center space-x-1.5 shadow-2xs">
-                                            <span class="check-indicator hidden text-white text-[11px] font-black">✓</span>
-                                            <span>{{ $tagEmoji }}</span>
-                                            <span>{{ $tag->label }}</span>
-                                        </button>
-                                    @endforeach
+                            @empty
+                                <div class="text-center py-6 text-slate-400 text-xs font-medium">
+                                    <p>Select your star rating and write your comment below!</p>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="text-center py-6 text-slate-400 text-xs font-medium">
-                                <p>No preset tags found. You can write your specific comment below!</p>
-                            </div>
-                        @endforelse
-                    </div>
-
-                    <!-- Custom Compliment Accordion -->
-                    <div class="pt-1">
-                        <button type="button" onclick="toggleCustomDetails()" class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center space-x-1.5 cursor-pointer">
-                            <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-black">+</span>
-                            <span>Add specific compliment (e.g. staff name, favorite dish)</span>
-                        </button>
-                        <div id="customDetailWrapper" class="hidden mt-2">
-                            <input type="text" id="customDetailInput" 
-                                   placeholder="e.g. Loved the Butter Chicken, Rahul provided great service" 
-                                   class="w-full text-xs rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-blue-500 p-3 bg-slate-50 font-medium">
+                            @endforelse
                         </div>
+
+                        <!-- Custom Compliment Accordion -->
+                        <div class="pt-1">
+                            <button type="button" onclick="toggleCustomDetails()" class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center space-x-1.5 cursor-pointer">
+                                <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-black">+</span>
+                                <span>Add specific compliment (e.g. dish name, staff name)</span>
+                            </button>
+                            <div id="customDetailWrapper" class="hidden mt-2">
+                                <input type="text" id="customDetailInput" 
+                                       placeholder="e.g. Loved the Butter Chicken, Rahul provided great service" 
+                                       class="w-full text-xs rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-blue-500 p-3 bg-slate-50 font-medium">
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Selected Counter & AI Generate CTA -->
-                    <div class="pt-2 space-y-2 border-t border-slate-100">
+                    <div class="pt-3 space-y-2 border-t border-slate-100">
                         <div class="flex items-center justify-between text-[11px] font-extrabold text-slate-600 px-1">
-                            <span id="selectedCountText" class="text-slate-500">0 highlights selected</span>
-                            <span class="text-slate-500 font-bold">
-                                ⚡ Instant Draft Ready
+                            <span id="selectedCountText" class="text-slate-500">Pick 1 or more highlights</span>
+                            <span class="text-emerald-600 font-bold flex items-center space-x-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span>Ready in seconds</span>
                             </span>
                         </div>
 
                         <button type="button" 
                                 id="generateBtn"
                                 onclick="generateReview()" 
-                                disabled
-                                class="w-full py-4 px-6 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 opacity-50 cursor-not-allowed shadow-xl transition-all flex items-center justify-center space-x-2">
+                                class="w-full py-4 px-6 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-98">
                             <svg class="w-4 h-4 text-amber-300 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 011.342 1.342l-.8 1.599L18.677 11H20a1 1 0 110 2h-1.323l-1.582 3.954.8 1.599a1 1 0 01-1.342 1.342l-1.599-.8L11 20.677V22a1 1 0 11-2 0v-1.323l-3.954-1.582-1.599.8a1 1 0 01-1.342-1.342l.8-1.599L1.323 13H0a1 1 0 110-2h1.323l1.582-3.954-.8-1.599a1 1 0 011.342-1.342l1.599.8L9 3.323V2a1 1 0 011-1z"/></svg>
-                            <span>Generate Review Draft ➔</span>
+                            <span>Generate Review with AI ➔</span>
                         </button>
                     </div>
 
                 </section>
 
 
-                <!-- ═══════════ STEP 3: GOOGLE REVIEW DRAFT & 1-TAP POST ═══════════ -->
+                <!-- ═══════════ STEP 2: GOOGLE REVIEW DRAFT & 1-TAP POST ═══════════ -->
                 <section id="step3" class="step-view hidden space-y-4">
                     
                     <!-- Back & Indicator -->
                     <div class="flex items-center justify-between">
-                        <button type="button" onclick="goToStep(2)" class="text-xs text-slate-500 hover:text-slate-900 font-bold flex items-center py-1 cursor-pointer">
+                        <button type="button" onclick="goToStep(1)" class="text-xs text-slate-500 hover:text-slate-900 font-bold flex items-center py-1 cursor-pointer">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                             Edit highlights
                         </button>
@@ -461,7 +402,7 @@
                             Your Google Review is Ready!
                         </h2>
                         <p class="text-xs text-slate-500 mt-1">
-                            Drafted based on your selected highlights. Feel free to tweak words or post directly.
+                            Choose your favorite style below or edit any words directly.
                         </p>
                     </div>
 
@@ -495,6 +436,20 @@
                             </button>
                         </div>
 
+                        <!-- Review Options / Variation Chooser -->
+                        <div id="reviewOptionsWrapper" class="hidden">
+                            <div class="flex items-center justify-between mb-1.5 px-0.5">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center space-x-1">
+                                    <svg class="w-3 h-3 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 011.342 1.342l-.8 1.599L18.677 11H20a1 1 0 110 2h-1.323l-1.582 3.954.8 1.599a1 1 0 01-1.342 1.342l-1.599-.8L11 20.677V22a1 1 0 11-2 0v-1.323l-3.954-1.582-1.599.8a1 1 0 01-1.342-1.342l.8-1.599L1.323 13H0a1 1 0 110-2h1.323l1.582-3.954-.8-1.599a1 1 0 011.342-1.342l1.599.8L9 3.323V2a1 1 0 011-1z"/></svg>
+                                    <span>Choose Style:</span>
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-semibold">Tap to switch variation</span>
+                            </div>
+                            <div id="reviewOptionsList" class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                                <!-- Option Pills rendered dynamically -->
+                            </div>
+                        </div>
+
                         <!-- Editable Review Textarea -->
                         <div class="relative">
                             <textarea id="reviewTextarea" 
@@ -516,13 +471,13 @@
                     </div>
 
                     <!-- Zero-Friction Helper Banner -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-3.5 text-xs text-blue-950 flex items-start space-x-3 shadow-2xs">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-3 text-xs text-blue-950 flex items-start space-x-3 shadow-2xs">
                         <div class="w-6 h-6 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
                             ⚡
                         </div>
                         <div class="leading-relaxed">
                             <strong class="font-extrabold text-blue-900 block">1-Tap Automatic Flow:</strong>
-                            Button click karte hi review <strong>clipboard me auto-copy</strong> ho jayega aur Google Maps review box khul jayega. Bas <strong>5 Stars</strong> select karke <strong>Paste &amp; Post</strong> karein!
+                            Button click karte hi review <strong>clipboard me auto-copy</strong> ho jayega aur Google Maps open ho jayega. Bas <strong>5 Stars</strong> select karke <strong>Paste &amp; Post</strong> karein!
                         </div>
                     </div>
 
@@ -531,7 +486,7 @@
                         <button type="button" 
                                 id="postGoogleBtn"
                                 onclick="postToGoogle()" 
-                                class="hero-pulse-btn w-full py-4 px-5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 shadow-xl transition-all flex items-center justify-center space-x-3 cursor-pointer">
+                                class="hero-pulse-btn w-full py-4 px-5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 shadow-xl shadow-blue-500/30 transition-all flex items-center justify-center space-x-3 cursor-pointer">
                             <!-- Official Google "G" Icon -->
                             <div class="w-7 h-7 bg-white rounded-full p-1.5 flex items-center justify-center flex-shrink-0 shadow-xs">
                                 <svg class="w-full h-full" viewBox="0 0 24 24">
@@ -560,7 +515,7 @@
                 </section>
 
 
-                <!-- ═══════════ STEP 4: SUCCESS GUIDANCE MODAL ═══════════ -->
+                <!-- ═══════════ STEP 3: SUCCESS GUIDANCE MODAL ═══════════ -->
                 <section id="stepThankYou" class="step-view hidden text-center py-6 space-y-5">
                     
                     <div class="relative w-20 h-20 mx-auto">
@@ -606,7 +561,7 @@
                     </div>
 
                     <div class="pt-4 border-t border-slate-100 flex flex-col space-y-2">
-                        <button type="button" onclick="goToStep(3)" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+                        <button type="button" onclick="goToStep(3)" class="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer">
                             &larr; Back to review draft
                         </button>
                         <a href="{{ route('home') }}" class="text-[11px] text-slate-400 hover:text-slate-600">
@@ -632,7 +587,7 @@
     </div>
 
     <!-- ═══════════ AI LOADING OVERLAY ═══════════ -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-xs w-full text-center flex flex-col items-center border border-slate-100 animate-in fade-in zoom-in-95">
             <div class="relative w-14 h-14 mb-4">
                 <div class="w-14 h-14 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
@@ -640,9 +595,9 @@
                     ✨
                 </div>
             </div>
-            <h3 class="text-sm font-black text-slate-900">Preparing Review Draft...</h3>
+            <h3 class="text-sm font-black text-slate-900">AI Drafting Your Review...</h3>
             <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                Combining your highlights into an authentic, natural Google review
+                Combining your highlights into authentic, natural review variations
             </p>
         </div>
     </div>
@@ -663,6 +618,8 @@
         let currentReviewId = null;
         let googleReviewUrl = "{{ $business->google_review_url }}";
         let whatsappReviewUrl = null;
+        let currentOptions = [];
+        let selectedOptionIndex = 0;
 
         const ratingMeta = {
             1: { emoji: "😞", text: "Disappointed Experience ⭐", bg: "bg-rose-50", border: "border-rose-200", color: "text-rose-800" },
@@ -693,32 +650,33 @@
                 }
             });
 
-            // Update emotional pill
+            // Update Emotional Reaction Pill
             const meta = ratingMeta[rating] || ratingMeta[5];
-            document.getElementById('ratingEmoji').textContent = meta.emoji;
-            document.getElementById('ratingCaption').textContent = meta.text;
+            const box = document.getElementById('ratingBox');
+            const emoji = document.getElementById('ratingEmoji');
+            const caption = document.getElementById('ratingCaption');
 
-            // Trigger celebratory burst on 5 stars
-            if (rating === 5) {
-                burstConfetti();
+            if (box && emoji && caption) {
+                emoji.textContent = meta.emoji;
+                caption.textContent = meta.text;
+                box.className = `inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full ${meta.bg} ${meta.border} border ${meta.color} text-[11px] font-extrabold shadow-2xs transition-all`;
             }
 
-            // Update preview stars in Step 3
+            // Update preview stars in Step 2
             let starsStr = '';
             for (let i = 0; i < rating; i++) starsStr += '★';
             for (let i = rating; i < 5; i++) starsStr += '☆';
             const starDisplay = document.getElementById('starDisplay');
             if (starDisplay) starDisplay.textContent = starsStr;
 
-            const nextBtn = document.getElementById('toStep2Btn');
-            if (nextBtn) nextBtn.disabled = false;
+            updateGenerateBtnState();
         }
 
         function filterCategoryTab(categoryClass, btn) {
             document.querySelectorAll('.cat-filter-btn').forEach(b => {
-                b.className = 'cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-2xs whitespace-nowrap';
+                b.className = 'cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-2xs whitespace-nowrap cursor-pointer';
             });
-            btn.className = 'cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-2xs whitespace-nowrap';
+            btn.className = 'cat-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-2xs whitespace-nowrap cursor-pointer';
 
             const groups = document.querySelectorAll('.category-group');
             if (categoryClass === 'all') {
@@ -747,20 +705,17 @@
         }
 
         function updateGenerateBtnState() {
-            const btn = document.getElementById('generateBtn');
             const countText = document.getElementById('selectedCountText');
             const count = selectedTags.length;
 
-            countText.textContent = count === 1 ? '1 highlight selected' : `${count} highlights selected`;
-
-            const hasTags = count > 0;
-            btn.disabled = !hasTags;
-            if (hasTags) {
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                btn.classList.add('cursor-pointer');
-            } else {
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-                btn.classList.remove('cursor-pointer');
+            if (countText) {
+                if (count === 0) {
+                    countText.textContent = 'Pick 1 or more highlights';
+                } else if (count === 1) {
+                    countText.textContent = '1 highlight selected';
+                } else {
+                    countText.textContent = `${count} highlights selected`;
+                }
             }
         }
 
@@ -773,40 +728,24 @@
         }
 
         function goToStep(step) {
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.add('hidden');
-            document.getElementById('stepThankYou').classList.add('hidden');
-
-            const bar1 = document.getElementById('bar1');
-            const bar2 = document.getElementById('bar2');
-            const bar3 = document.getElementById('bar3');
+            const step1 = document.getElementById('step1');
+            const step3 = document.getElementById('step3');
+            const stepThankYou = document.getElementById('stepThankYou');
             const stepLabel = document.getElementById('stepLabelText');
 
-            if (step === 1) {
-                document.getElementById('step1').classList.remove('hidden');
-                bar1.style.width = '100%';
-                bar2.style.width = '0%';
-                bar3.style.width = '0%';
-                stepLabel.textContent = 'Step 1 of 3: Rate Experience';
-            } else if (step === 2) {
-                document.getElementById('step2').classList.remove('hidden');
-                bar1.style.width = '100%';
-                bar2.style.width = '100%';
-                bar3.style.width = '0%';
-                stepLabel.textContent = 'Step 2 of 3: Choose Highlights';
+            step1.classList.add('hidden');
+            step3.classList.add('hidden');
+            stepThankYou.classList.add('hidden');
+
+            if (step === 1 || step === 2) {
+                step1.classList.remove('hidden');
+                if (stepLabel) stepLabel.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span><span>Step 1: Choose Highlights</span>';
             } else if (step === 3) {
-                document.getElementById('step3').classList.remove('hidden');
-                bar1.style.width = '100%';
-                bar2.style.width = '100%';
-                bar3.style.width = '100%';
-                stepLabel.textContent = 'Step 3 of 3: Review & Post';
+                step3.classList.remove('hidden');
+                if (stepLabel) stepLabel.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Step 2: Review & Post</span>';
             } else if (step === 'thankYou') {
-                document.getElementById('stepThankYou').classList.remove('hidden');
-                bar1.style.width = '100%';
-                bar2.style.width = '100%';
-                bar3.style.width = '100%';
-                stepLabel.textContent = 'Submitted on Google!';
+                stepThankYou.classList.remove('hidden');
+                if (stepLabel) stepLabel.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Submitted on Google!</span>';
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -819,9 +758,9 @@
                 allTags.push(customDetail);
             }
 
+            // If user hasn't selected any specific tags, add default highlight so it's frictionless
             if (allTags.length === 0) {
-                showToast("Please pick at least 1 highlight tag");
-                return;
+                allTags.push('Great overall experience');
             }
 
             showLoading(true);
@@ -847,6 +786,7 @@
                     googleReviewUrl = data.google_url;
                     whatsappReviewUrl = data.whatsapp_url;
                     document.getElementById('reviewTextarea').value = data.review_text;
+                    renderReviewOptions(data.options || [data.review_text]);
                     burstConfetti();
                     goToStep(3);
                 } else {
@@ -857,6 +797,54 @@
                 showToast("Network error. Please try again.");
             } finally {
                 showLoading(false);
+            }
+        }
+
+        function renderReviewOptions(options) {
+            currentOptions = Array.isArray(options) && options.length > 0 ? options : [document.getElementById('reviewTextarea').value];
+            selectedOptionIndex = 0;
+
+            const wrapper = document.getElementById('reviewOptionsWrapper');
+            const container = document.getElementById('reviewOptionsList');
+            if (!wrapper || !container) return;
+
+            if (currentOptions.length <= 1) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            wrapper.classList.remove('hidden');
+            container.innerHTML = '';
+
+            const optionLabels = ['✨ Style 1 (Crisp)', '⚡ Style 2 (Detailed)', '🌟 Style 3 (Casual)'];
+
+            currentOptions.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = idx === 0
+                    ? 'opt-pill px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-xs transition-all whitespace-nowrap cursor-pointer'
+                    : 'opt-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all whitespace-nowrap cursor-pointer';
+                btn.innerHTML = `${optionLabels[idx] || `Option ${idx + 1}`}`;
+                btn.onclick = () => selectReviewOption(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectReviewOption(index) {
+            if (!currentOptions[index]) return;
+            selectedOptionIndex = index;
+            document.getElementById('reviewTextarea').value = currentOptions[index];
+
+            const container = document.getElementById('reviewOptionsList');
+            if (container) {
+                const pills = container.querySelectorAll('.opt-pill');
+                pills.forEach((p, idx) => {
+                    if (idx === index) {
+                        p.className = 'opt-pill px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-xs transition-all whitespace-nowrap cursor-pointer';
+                    } else {
+                        p.className = 'opt-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all whitespace-nowrap cursor-pointer';
+                    }
+                });
             }
         }
 
@@ -872,15 +860,13 @@
         }
 
         // CRITICAL: This MUST be called SYNCHRONOUSLY inside a click handler.
-        // Never call this after an await or setTimeout — mobile browsers lose the user gesture context.
         function copyTextSync(text) {
-            // Method 1: Modern Clipboard API (HTTPS only, but handles async internally)
-            // We fire this as a best-effort side-channel — it may succeed on HTTPS
+            // Modern Clipboard API
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).catch(() => {});
             }
 
-            // Method 2: Synchronous execCommand — MUST run within user gesture
+            // Fallback execCommand
             try {
                 const ta = document.createElement('textarea');
                 ta.value = text;
@@ -911,23 +897,23 @@
 
                 <div style="text-align:center;margin-bottom:16px;">
                   <div style="font-size:36px;margin-bottom:6px;">📋</div>
-                  <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 4px 0;letter-spacing:-0.3px;">Review Copy Karein</h3>
-                  <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;">Neeche box me <strong>tap &amp; hold</strong> karein → <strong>Select All</strong> → <strong>Copy</strong> — phir Google me paste karein</p>
+                  <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 4px 0;letter-spacing:-0.3px;">Review Copy Ho Gaya!</h3>
+                  <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;">Neeche button tap karein &rarr; Google khulega &rarr; <strong>5 Stars</strong> select karke <strong>Paste</strong> karein</p>
                 </div>
 
-                <textarea id="modalReviewText" rows="5"
-                  style="width:100%;border:2.5px solid #2563eb;border-radius:14px;padding:14px;font-size:14px;color:#1e293b;background:#f0f6ff;resize:none;box-sizing:border-box;font-family:inherit;line-height:1.6;font-weight:600;"
+                <textarea id="modalReviewText" rows="4"
+                  style="width:100%;border:2px solid #2563eb;border-radius:14px;padding:12px;font-size:13px;color:#1e293b;background:#f0f6ff;resize:none;box-sizing:border-box;font-family:inherit;line-height:1.5;font-weight:600;"
                   onclick="this.select();this.setSelectionRange(0,99999);try{document.execCommand('copy')}catch(e){}">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
 
                 <div style="display:flex;align-items:center;gap:8px;margin-top:8px;margin-bottom:16px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;">
-                  <span style="font-size:18px;">💡</span>
-                  <span style="font-size:12px;color:#92400e;font-weight:700;line-height:1.4;">Box me tap karo &rarr; Select All &rarr; Copy — phir Google me paste karein</span>
+                  <span style="font-size:16px;">💡</span>
+                  <span style="font-size:12px;color:#92400e;font-weight:700;line-height:1.4;">Review clipboard me copy ho gaya hai. Google me paste karke post karein!</span>
                 </div>
 
                 <button id="modalGoBtn"
                   style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,#1d4ed8,#4338ca);color:#fff;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:-0.2px;">
-                  <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="rgba(255,255,255,0.8)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="rgba(255,255,255,0.6)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="rgba(255,255,255,0.9)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-                  Google Review Page Kholein
+                  <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="rgba(255,255,255,0.8)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="rgba(255,255,255,0.6)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="rgba(255,255,255,0.9)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                  Open Google Review Page ➔
                 </button>
 
                 <button onclick="document.getElementById('copyGoModal').remove();"
@@ -937,19 +923,7 @@
 
             document.body.appendChild(modal);
 
-            // Auto-select text in modal textarea (synchronous — within this user gesture chain)
-            setTimeout(() => {
-                const ta = document.getElementById('modalReviewText');
-                if (ta) {
-                    ta.focus();
-                    ta.select();
-                    ta.setSelectionRange(0, 99999);
-                    try { document.execCommand('copy'); } catch(e) {}
-                }
-            }, 80);
-
             document.getElementById('modalGoBtn').addEventListener('click', function() {
-                // Sync copy one more time on this button click (fresh user gesture)
                 const ta = document.getElementById('modalReviewText');
                 if (ta) {
                     ta.focus();
@@ -962,7 +936,7 @@
                 }
                 document.getElementById('copyGoModal').remove();
                 trackClick();
-                window.location.href = googleUrl; // Same tab — most reliable on mobile
+                window.location.href = googleUrl;
                 setTimeout(() => { goToStep('thankYou'); burstConfetti(); }, 800);
             });
         }
@@ -985,15 +959,11 @@
                 return;
             }
 
-            // STEP 1: Synchronous copy — MUST be the FIRST thing inside click handler
-            // (before any await, fetch, or setTimeout — preserves user gesture)
             const copied = copyTextSync(reviewText);
 
             if (isMobileDevice()) {
-                // On mobile: show bottom sheet with text pre-selected for manual copy
                 showCopyAndGoModal(reviewText, googleReviewUrl);
             } else {
-                // Desktop: silent copy + open in new tab
                 showToast(copied ? 'Copied! Opening Google Reviews...' : 'Opening Google Reviews...');
                 trackClick();
                 const popup = window.open(googleReviewUrl, '_blank');
@@ -1011,33 +981,6 @@
             const ok = copyTextSync(reviewText);
             showToast(ok ? 'Review text copied! 📋' : 'Text select karke copy karein 📋');
         }
-
-        async function trackClick() {
-            if (currentReviewId) {
-                try {
-                    fetch(`/r/${businessSlug}/click/${currentReviewId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }
-                    });
-                } catch (e) {}
-            }
-        }
-
-        function openGoogleReviews() {
-            trackClick();
-            // On mobile, window.open is often blocked — use location.href for reliability
-            if (isMobileDevice()) {
-                window.location.href = googleReviewUrl;
-            } else {
-                const popup = window.open(googleReviewUrl, '_blank');
-                if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-                    window.location.href = googleReviewUrl;
-                }
-            }
-            goToStep('thankYou');
-            burstConfetti();
-        }
-
 
         function shareOnWhatsApp() {
             const reviewText = document.getElementById('reviewTextarea').value.trim();
@@ -1097,7 +1040,7 @@
                 particles.forEach(p => {
                     p.x += p.vx;
                     p.y += p.vy;
-                    p.vy += 0.35; // gravity
+                    p.vy += 0.35;
                     p.alpha -= p.decay;
 
                     if (p.alpha > 0) {

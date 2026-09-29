@@ -193,17 +193,21 @@
         </div>
     </div>
 
+    @php
+        $defaultTags = $defaultTags ?? [
+            ['label' => 'Experienced & Friendly Staff', 'category' => 'service'],
+            ['label' => 'Top Notch Hygiene & Sanitization', 'category' => 'ambience'],
+            ['label' => 'Prompt & No Waiting Time', 'category' => 'service'],
+            ['label' => 'Fair & Transparent Pricing', 'category' => 'value'],
+            ['label' => 'State of the Art Quality', 'category' => 'taste'],
+        ];
+    @endphp
+
     <script>
         function presetFormHandler() {
             return {
-                selectedEmoji: '{{ old('icon', '🦷') }}',
-                tags: @json(old('tags', [
-                    ['label' => 'Experienced & Friendly Staff', 'category' => 'service'],
-                    ['label' => 'Top Notch Hygiene & Sanitization', 'category' => 'ambience'],
-                    ['label' => 'Prompt & No Waiting Time', 'category' => 'service'],
-                    ['label' => 'Fair & Transparent Pricing', 'category' => 'value'],
-                    ['label' => 'State of the Art Quality', 'category' => 'taste'],
-                ])),
+                selectedEmoji: @json(old('icon', '🦷')),
+                tags: @json(old('tags', $defaultTags)),
 
                 addTag() {
                     this.tags.push({ label: '', category: 'service' });

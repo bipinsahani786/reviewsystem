@@ -57,7 +57,18 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 mb-1.5">Max Outlets / Locations</label>
+                            <div class="flex items-center">
+                                <input type="number" name="max_businesses" min="1" max="1000" value="{{ old('max_businesses', 1) }}" required
+                                       class="w-full text-xs px-3.5 py-2.5 rounded-l-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="px-2.5 py-2.5 bg-zinc-100 border border-l-0 border-zinc-300 rounded-r-lg text-xs font-bold text-zinc-600">
+                                    QRs
+                                </span>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block text-xs font-bold text-zinc-700 mb-1.5">Billing Period Cycle</label>
                             <select name="billing_period" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
@@ -71,7 +82,7 @@
                             <div class="flex items-center">
                                 <input type="number" name="trial_days" min="0" max="365" value="{{ old('trial_days', 14) }}" required
                                        class="w-full text-xs px-3.5 py-2.5 rounded-l-lg border border-zinc-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                <span class="px-3 py-2.5 bg-zinc-100 border border-l-0 border-zinc-300 rounded-r-lg text-xs font-bold text-zinc-600">
+                                <span class="px-2.5 py-2.5 bg-zinc-100 border border-l-0 border-zinc-300 rounded-r-lg text-xs font-bold text-zinc-600">
                                     Days
                                 </span>
                             </div>

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentSale;
 use App\Models\Business;
 use App\Models\Plan;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,9 +23,12 @@ class BillingController extends Controller
     /**
      * Display the subscription & billing overview for the current merchant.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
+        if ($user && $user->isAgent() && ! $user->isSuperAdmin()) {
+            return redirect()->route('agent.payouts');
+        }
 
         // Get the active business in context
         $businessId = $request->query('business_id');
@@ -37,6 +42,12 @@ class BillingController extends Controller
         $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
         $hasRazorpay = ! empty(config('services.razorpay.key')) && ! empty(config('services.razorpay.secret'));
 
+        // Determine current active plan tier for downgrade prevention
+        $currentPlanSortOrder = 0;
+        if ($business && $business->plan_id && ($business->hasActiveSubscription() || $business->isOnTrial())) {
+            $currentPlanSortOrder = $business->plan?->sort_order ?? 0;
+        }
+
         // Load transaction logs and invoices for this merchant / business
         $transactions = Transaction::query()
             ->when($business, function ($q) use ($business) {
@@ -48,7 +59,7 @@ class BillingController extends Controller
             ->take(15)
             ->get();
 
-        return view('admin.billing.index', compact('business', 'plans', 'hasRazorpay', 'transactions'));
+        return view('admin.billing.index', compact('business', 'plans', 'hasRazorpay', 'transactions', 'currentPlanSortOrder'));
     }
 
     /**
@@ -79,6 +90,18 @@ class BillingController extends Controller
         $business = Business::findOrFail($request->business_id);
         $business = $this->getAuthorizedBusiness($business);
         $plan = Plan::findOrFail($request->plan_id);
+
+        // Prevent downgrade: if user is on active subscription, they cannot switch to a lower-tier plan
+        if (! Auth::user()->isSuperAdmin() && $business->hasActiveSubscription() && $business->plan_id) {
+            $currentSortOrder = $business->plan?->sort_order ?? 0;
+            $targetSortOrder = $plan->sort_order ?? 0;
+            if ($targetSortOrder < $currentSortOrder) {
+                return response()->json([
+                    'error' => true,
+                    'message' => "You are already on the {$business->plan?->name}. Downgrading to a lower plan is not permitted. Your current plan remains active until ".($business->subscription_ends_at?->format('M d, Y') ?? 'the end of your billing period').'.',
+                ], 422);
+            }
+        }
 
         $cycle = $request->billing_cycle;
         $price = $cycle === 'yearly' && $plan->yearly_price ? $plan->yearly_price : $plan->price;
@@ -208,8 +231,8 @@ class BillingController extends Controller
         }
 
         $cycle = $request->billing_cycle;
+        $price = ($cycle === 'yearly' && $plan->yearly_price > 0) ? (float) $plan->yearly_price : (float) $plan->price;
         $subscriptionEndsAt = $cycle === 'yearly' ? now()->addYear() : now()->addMonth();
-        $price = $cycle === 'yearly' && $plan->yearly_price ? $plan->yearly_price : $plan->price;
 
         // 1. Activate Business Subscription
         $business->update([
@@ -221,6 +244,19 @@ class BillingController extends Controller
             'razorpay_payment_id' => $request->razorpay_payment_id,
             'razorpay_subscription_id' => $request->razorpay_order_id,
         ]);
+
+        // Also sync subscription across all other outlets owned by this user
+        if ($business->owner_user_id) {
+            Business::where('owner_user_id', $business->owner_user_id)
+                ->where('id', '!=', $business->id)
+                ->update([
+                    'plan_id' => $plan->id,
+                    'subscription_status' => 'active',
+                    'subscription_ends_at' => $subscriptionEndsAt,
+                    'trial_ends_at' => null,
+                    'billing_cycle' => $cycle,
+                ]);
+        }
 
         // 2. Generate Transaction Log & Invoice
         $transaction = Transaction::create([
@@ -243,6 +279,28 @@ class BillingController extends Controller
                 'is_sandbox' => $isSandbox,
             ],
         ]);
+
+        // 3. Automatically record Agent Commission if merchant was referred by an agent
+        $merchant = $business->owner ?? User::find($business->owner_user_id);
+        if ($merchant && $merchant->agent_id) {
+            $agent = User::where('id', $merchant->agent_id)->where('is_agent', true)->first();
+            if ($agent && $agent->commission_rate > 0) {
+                $commissionAmount = round($price * ($agent->commission_rate / 100), 2);
+                AgentSale::create([
+                    'agent_id' => $agent->id,
+                    'merchant_id' => $merchant->id,
+                    'business_id' => $business->id,
+                    'plan_id' => $plan->id,
+                    'status' => 'active',
+                    'plan_price' => $price,
+                    'commission_rate' => $agent->commission_rate,
+                    'commission_amount' => $commissionAmount,
+                    'commission_status' => 'pending',
+                    'billing_cycle' => $cycle,
+                    'notes' => 'Automatic commission from merchant plan purchase (Invoice: '.$transaction->invoice_number.')',
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,

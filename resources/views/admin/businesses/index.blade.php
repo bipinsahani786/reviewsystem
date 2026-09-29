@@ -9,7 +9,7 @@
                     Manage client businesses, customize colors, Google Place IDs, tags, and QR codes.
                 </p>
             </div>
-            @if(auth()->user()->isSuperAdmin() || !auth()->user()->businesses()->exists())
+            @if(auth()->user()->canAddMoreBusinesses())
             <div>
                 <a href="{{ route('admin.businesses.create') }}" class="inline-flex items-center px-4 py-2.5 bg-blue-600 border border-transparent rounded-xl text-xs font-bold text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>

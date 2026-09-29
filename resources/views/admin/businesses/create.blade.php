@@ -32,6 +32,28 @@
                 @endif
 
                 @if(!Auth::user()->isSuperAdmin())
+                    @php
+                        $usedCount = $ownedCount ?? 0;
+                        $planMax = $maxAllowed ?? 1;
+                        $planName = $currentPlan?->name ?? 'Starter';
+                        $progressPct = $planMax > 0 ? min(100, round(($usedCount / $planMax) * 100)) : 100;
+                    @endphp
+                    <div class="mb-6 p-4 bg-gradient-to-r from-blue-500/8 via-blue-500/4 to-transparent border border-blue-200 rounded-2xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">📍</span>
+                                <div>
+                                    <div class="text-xs font-black text-blue-900">Outlet Quota — {{ $planName }}</div>
+                                    <div class="text-[11px] text-blue-700">{{ $usedCount }} of {{ $planMax }} location{{ $planMax > 1 ? 's' : '' }} used</div>
+                                </div>
+                            </div>
+                            <a href="{{ route('admin.billing.index') }}" class="text-[11px] font-bold text-blue-600 hover:underline">Upgrade Plan →</a>
+                        </div>
+                        <div class="w-full bg-blue-100 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full {{ $progressPct >= 100 ? 'bg-rose-500' : ($progressPct >= 75 ? 'bg-amber-500' : 'bg-blue-500') }}" style="width: {{ $progressPct }}%"></div>
+                        </div>
+                    </div>
+
                     <div class="mb-6 p-4 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200 rounded-2xl flex items-center gap-3">
                         <span class="text-2xl">🎁</span>
                         <div>
@@ -165,24 +187,25 @@
                             <select name="owner_user_id" id="owner_user_id" class="w-full text-sm rounded-xl border-purple-200 focus:border-purple-500 focus:ring-purple-500 p-3">
                                 @foreach($users as $u)
                                     <option value="{{ $u->id }}" {{ (old('owner_user_id') == $u->id || Auth::id() == $u->id) ? 'selected' : '' }}>
-                                        {{ $u->name }} ({{ $u->email }})
+                                        {{ $u->name }} ({{ $u->email }}) {{ $u->isSuperAdmin() ? '— Super Admin' : '— Merchant' }}
                                     </option>
                                 @endforeach
                             </select>
+                            <p class="text-[11px] text-slate-400 mt-1">Select which registered merchant account owns this business. When they log in, they will only see and manage their own store.</p>
                         </div>
                     @endif
 
-                    <!-- Assign Subscription Plan -->
-                    @if(isset($plans) && $plans->count() > 0)
+                    {{-- Assign Subscription Plan — Super Admin Only --}}
+                    @if(Auth::user()->isSuperAdmin() && isset($plans) && $plans->count() > 0)
                         <div class="pt-4 border-t border-slate-100">
                             <label for="plan_id" class="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                                Assign Subscription Plan
+                                Assign Subscription Plan <span class="font-normal text-slate-400">(Super Admin)</span>
                             </label>
                             <select name="plan_id" id="plan_id" class="w-full text-sm rounded-xl border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500 p-3 font-semibold">
                                 <option value="">-- No Plan / Custom Tier --</option>
                                 @foreach($plans as $p)
                                     <option value="{{ $p->id }}" {{ old('plan_id') == $p->id ? 'selected' : '' }}>
-                                        {{ $p->name }} — {{ $p->currency }}{{ number_format($p->price) }}{{ $p->billing_cycle }} ({{ $p->tagline ?: 'Active' }})
+                                        {{ $p->name }} — {{ $p->currency }}{{ number_format($p->price) }}{{ $p->billing_cycle }} (Max {{ $p->max_businesses ?? 1 }} outlet{{ ($p->max_businesses ?? 1) > 1 ? 's' : '' }})
                                     </option>
                                 @endforeach
                             </select>

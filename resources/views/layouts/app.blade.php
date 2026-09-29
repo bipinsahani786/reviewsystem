@@ -195,10 +195,22 @@
                     </button>
 
                     <div class="hidden sm:flex items-center space-x-2 text-xs font-semibold text-slate-500">
-                        <a href="{{ route('admin.dashboard') }}" class="hover:text-slate-900 transition">Portal</a>
+                        <a href="{{ Auth::user()?->isAgent() && !Auth::user()?->isSuperAdmin() ? route('agent.dashboard') : route('admin.dashboard') }}" class="hover:text-slate-900 transition">
+                            {{ Auth::user()?->isAgent() && !Auth::user()?->isSuperAdmin() ? 'Agent Portal' : 'Portal' }}
+                        </a>
                         <span class="text-slate-300">/</span>
                         <span class="text-slate-800 font-bold">
-                            @if(request()->routeIs('admin.dashboard'))
+                            @if(request()->routeIs('agent.dashboard'))
+                                Agent Dashboard
+                            @elseif(request()->routeIs('agent.clients.*'))
+                                My Clients
+                            @elseif(request()->routeIs('agent.payouts'))
+                                Earnings &amp; Payouts
+                            @elseif(request()->routeIs('agent.marketing'))
+                                Marketing &amp; QR Kit
+                            @elseif(request()->routeIs('admin.agents.*'))
+                                Sales Agents Management
+                            @elseif(request()->routeIs('admin.dashboard'))
                                 Dashboard
                             @elseif(request()->routeIs('admin.businesses.*'))
                                 Businesses &amp; Standees
@@ -226,28 +238,94 @@
                 {{-- Right: Status Pill & Quick Action Links & User Dropdown --}}
                 <div class="flex items-center space-x-3">
                     
+                    @if(Auth::user()?->isAgent() && ! Auth::user()?->isSuperAdmin())
+                        {{-- Agent Status Pill in Header --}}
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-violet-50 text-violet-800 border border-violet-200 shadow-2xs">
+                                <span class="w-2 h-2 rounded-full bg-violet-600 animate-pulse"></span>
+                                <span>Code: <strong class="font-mono">{{ Auth::user()->agent_code }}</strong></span>
+                            </span>
+                            <span class="hidden sm:inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                                ⚡ {{ number_format(Auth::user()->commission_rate, 0) }}% Commission
+                            </span>
+                            <a href="{{ route('agent.payouts') }}" class="hidden md:inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition shadow-2xs">
+                                💰 My Payouts
+                            </a>
+                        </div>
+                    @else
+                        {{-- Subscription / Trial Days Remaining Badge (Header) --}}
+                        @php
+                            $headerUser = Auth::user();
+                            $headerBiz = $headerUser ? $headerUser->businesses()->with('plan')->first() : null;
+                        @endphp
+
+                    @if($headerBiz)
+                        @if($headerBiz->isOnTrial())
+                            <a href="{{ route('admin.billing.index') }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200/90 hover:bg-amber-100 transition shadow-2xs" 
+                               title="Trial ends on {{ $headerBiz->trial_ends_at?->format('M d, Y') }}">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>🎁 {{ $headerBiz->trialDaysRemaining() }} Days Trial Left</span>
+                                <span class="hidden sm:inline-block text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded-md ml-0.5">Upgrade</span>
+                            </a>
+                        @elseif($headerBiz->hasActiveSubscription())
+                            @php
+                                $daysLeft = $headerBiz->subscriptionDaysRemaining();
+                            @endphp
+                            <a href="{{ route('admin.billing.index') }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200/90 hover:bg-emerald-100 transition shadow-2xs"
+                               title="Active plan: {{ $headerBiz->plan?->name }} (Valid until {{ $headerBiz->subscription_ends_at?->format('M d, Y') }})">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>⚡ {{ $daysLeft }} Days Left</span>
+                                <span class="hidden sm:inline-block text-[10px] font-extrabold text-emerald-800 bg-emerald-200/80 px-1.5 py-0.5 rounded-md ml-0.5">
+                                    {{ $headerBiz->plan?->name ?? 'Active' }}
+                                </span>
+                            </a>
+                        @elseif($headerBiz->isExpired())
+                            <a href="{{ route('admin.billing.index') }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-900 border border-rose-300 hover:bg-rose-100 transition shadow-2xs">
+                                <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                                <span>⚠️ Plan Expired</span>
+                                <span class="hidden sm:inline-block text-[10px] font-extrabold text-white bg-rose-600 px-1.5 py-0.5 rounded-md ml-0.5">Renew</span>
+                            </a>
+                        @endif
+
+                        {{-- Outlet Quota Pill (non-superadmin only) --}}
+                        @if(!Auth::user()->isSuperAdmin())
+                            @php
+                                $hUsed = Auth::user()->businesses()->count();
+                                $hMax  = Auth::user()->maxBusinessesAllowed();
+                            @endphp
+                            <a href="{{ route('admin.businesses.index') }}"
+                               class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition shadow-2xs
+                                      {{ $hUsed >= $hMax ? 'bg-rose-50 text-rose-900 border-rose-200 hover:bg-rose-100' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}"
+                               title="{{ $hUsed }} of {{ $hMax }} outlets used on your plan">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <span>{{ $hUsed }}/{{ $hMax }} Outlets</span>
+                            </a>
+                        @endif
+                    @endif
+                    @endif
+
                     {{-- White-Hat Compliance Pill --}}
-                    <div class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700">
+                    <div class="hidden xl:inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>Google 100% Policy Safe</span>
                     </div>
 
                     {{-- Quick Action CTA: Add Business (or My QR Standee if already created) --}}
-                    @if(Auth::user()->isSuperAdmin() || !Auth::user()->businesses()->exists())
+                    @if(Auth::user()->isSuperAdmin() || Auth::user()->canAddMoreBusinesses())
                         <a href="{{ route('admin.businesses.create') }}" 
                            class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                             <span>Add Business</span>
                         </a>
-                    @else
-                        @php $headerBiz = Auth::user()->businesses()->first(); @endphp
-                        @if($headerBiz)
-                            <a href="{{ route('admin.businesses.qr.show', $headerBiz) }}" 
-                               class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                                <span>My QR Standee</span>
-                            </a>
-                        @endif
+                    @elseif($headerBiz)
+                        <a href="{{ route('admin.businesses.qr.show', $headerBiz) }}" 
+                           class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                            <span>My QR Standee</span>
+                        </a>
                     @endif
 
                     {{-- Live Website Link --}}
