@@ -94,8 +94,12 @@ class GeminiReviewGenerator
             'gemini-3.8-flash',
         ]));
 
-        $tagList = implode(', ', $tags);
+        $tagList = count($tags) > 0 ? implode(', ', $tags) : 'overall great experience';
         $language = strtolower($business->language_preference ?? 'hinglish');
+
+        $langInstruction = $language === 'english'
+            ? "Write in natural, conversational, everyday English (like a real person typing a quick review on Google Maps). Use contractions like 'didn\'t', 'wasn\'t', 'I\'ve', 'loved the'. Sound relaxed, honest, and personal. DO NOT write formal essays or corporate reviews."
+            : "Write in casual, authentic conversational Hinglish (the way young Indians chat on WhatsApp or post on Google Maps). Use words like 'bohot badhiya', 'ekdum fresh / spot on', 'maza aa gaya', 'bina kisi delay ke', 'staff kaafi polite tha', 'paisa vasool', '10/10', 'definitely firse visit karenge'. DO NOT use formal shuddh Hindi (no 'ati uttam', 'vyanjan', 'anubhav prapt hua').";
 
         $negativeHistoryPrompt = '';
         if (! empty($pastReviews)) {
@@ -103,22 +107,24 @@ class GeminiReviewGenerator
             $negativeHistoryPrompt = "\nCRITICAL: Do NOT write anything similar to these recent reviews already posted for this business:\n- {$historySample}\nUse completely different sentences, vocabulary, and tone.";
         }
 
-        $instructionsCount = $count > 1 ? "Generate {$count} distinctly different review options separated by '---'." : 'Generate exactly 1 review.';
+        $instructionsCount = $count > 1
+            ? "Output exactly {$count} distinct review options separated ONLY by '---'.\n   - Option 1: Short & crisp (1-2 punchy sentences, straight to the point).\n   - Option 2: Personal & warm (mentions visiting with friends/family or a specific visit/order context).\n   - Option 3: Casual & enthusiastic (e.g., '10/10', 'total value for money', genuine recommendation)."
+            : 'Write exactly 1 genuine review (1 to 3 natural sentences).';
 
         $prompt = <<<PROMPT
-You are a real customer writing an authentic, conversational Google review for "{$business->name}".
-Star rating: {$rating}/5.
-Highlights experienced: [{$tagList}].
-Language preference: {$language}.
+You are a real customer writing a quick, genuine Google Maps review on your smartphone for "{$business->name}". You are an everyday person, NOT an AI, copywriter, or food critic.
+Star rating: {$rating}/5 stars.
+Highlights to include naturally: [{$tagList}].
+Language: {$language}.
+{$langInstruction}
 {$negativeHistoryPrompt}
 
-Rules:
-1. Write 2 to 3 complete, natural sentences (40 to 60 words each).
-2. Sound 100% human, spontaneous and honest.
-3. If Hinglish, use natural modern spoken Hindi-English (e.g. "Food bohot tasty tha aur service bhi quick thi. Overall bohot accha experience raha!").
-4. If English, use natural conversational tone.
-5. NO greetings, NO explanations, NO quotes, NO bullet points, NO asterisks or markdown.
-6. {$instructionsCount}
+CRITICAL RULES:
+1. Sound 100% human and conversational. Write naturally, like someone typing on a phone right after visiting.
+2. STRICTLY BAN all robotic AI words and clichés. NEVER use: "culinary delight", "gastronomic", "impeccable", "commendable", "testament", "haven", "nestled", "beacon", "plethora", "delve", "look no further", "a must-visit gem", "patrons", "epitome", "exquisite", "unparalleled", "par excellence", "embodies", "elevates the experience", "in conclusion".
+3. NO robotic marketing phrases, NO hashtags, NO emojis, NO quotes, NO asterisks, NO markdown.
+4. {$instructionsCount}
+5. DO NOT prefix with "Option 1:" or "Review 1:". Output only the clean review text separated by '---'.
 PROMPT;
 
         $lastError = null;
@@ -263,12 +269,12 @@ PROMPT;
 
         foreach ($segments as $segment) {
             $cleaned = trim($segment, " \"'\n\r\t-");
-            // Strip numbered lists, markdown bullets, prefixes
-            $cleaned = preg_replace('/^(?:Option\s*\d+:|\d+[\.\)\-]|Review\s*\d+:)\s*/i', '', $cleaned);
+            // Strip numbered lists, markdown bullets, prefixes like Option 1:, Style 1:, Review 1:
+            $cleaned = preg_replace('/^(?:(?:Option|Style|Review)\s*#?\d+[:\-\.]?|\d+[\.\)\-])\s*/i', '', $cleaned);
             $cleaned = str_replace(['**', '##', '```', '"', '*'], '', $cleaned);
             $cleaned = trim($cleaned);
 
-            if (mb_strlen($cleaned) >= 35) {
+            if (mb_strlen($cleaned) >= 25) {
                 // Check that it does not closely duplicate past reviews
                 if (! $this->isDuplicateOfPast($cleaned, $pastReviews)) {
                     $cleanList[] = $cleaned;
@@ -276,7 +282,7 @@ PROMPT;
             }
         }
 
-        return ! empty($cleanList) ? $cleanList : (mb_strlen($rawText) >= 35 ? [trim($rawText)] : []);
+        return ! empty($cleanList) ? $cleanList : (mb_strlen($rawText) >= 25 ? [trim($rawText)] : []);
     }
 
     /**
@@ -359,42 +365,38 @@ PROMPT;
                 'openers' => [
                     "{$biz} me visit karke sach me maza aa gaya!",
                     "Aaj pehli baar {$biz} try kiya and bohot accha laga.",
-                    "{$biz} is definitely one of the finest places in town.",
+                    "{$biz} is definitely one of the best spots around here.",
                     "Hamara experience {$biz} ke sath bohot hi badhiya raha.",
                     'Bohot time baad aisi kamaal ki jagah visit ki hai.',
-                    "Visited {$biz} with family and loved everything.",
+                    "Visited {$biz} with family and loved the whole vibe.",
                     "{$biz} ne hamari expectations se badhkar service di.",
                     "Superb experience from start to finish at {$biz}!",
-                    "I had heard a lot about {$biz}, and it truly lived up to the hype.",
                     "Aaj {$biz} aake dil khush ho gaya.",
-                    "Really impressed with how well {$biz} is managed.",
+                    "Really loved how well {$biz} is managed.",
                     "Five stars well deserved for {$biz}.",
                     "Kamaal ka ambiance aur zabardast service mili {$biz} par.",
                     "One of the best decisions to visit {$biz} today.",
-                    "Everything felt very authentic and welcoming at {$biz}.",
-                    "{$biz} provides top-notch quality in this area.",
-                    "Had an extraordinary visit at {$biz} today.",
+                    "Sab kuch bohot authentic aur welcoming laga {$biz} me.",
                     "Mera personal favorite ban gaya hai {$biz}.",
                     "Sach me 10 out of 10 experience raha {$biz} ke sath.",
-                    "Such a pleasant and memorable visit to {$biz}.",
+                    "Kal dosto ke sath {$biz} gaye the and sabko bohot pasand aaya.",
+                    "Pehli baar aaya tha {$biz} par ab regular customer ban jaunga.",
                 ],
                 'middles' => [
                     "Khaaskar yahan ka {$tagsStr} bohot shaandaar tha.",
-                    "Service and {$tagsStr} dono ekdum top class the.",
+                    "Service and {$tagsStr} dono ekdum spot on the.",
                     "{$tagsStr} ne toh bilkul dil jeet liya, quality 10/10.",
                     "Staff ka behavior bohot polite tha aur {$tagsStr} best tha.",
-                    "Unka attention to detail aur {$tagsStr} lajawaab hai.",
-                    "Everything regarding {$tagsStr} was managed perfectly.",
-                    "Vibe bohot positive thi aur {$tagsStr} was exceptional.",
-                    "Bina kisi delay ke sab kuch smoothly deliver hua, especially {$tagsStr}.",
+                    "Sab kuch smoothly manage hua, especially {$tagsStr}.",
+                    "Bina kisi delay ke sab kuch fast deliver hua, specially {$tagsStr}.",
                     "Cleanliness aur {$tagsStr} dono par poora dhyan diya gaya hai.",
                     "Fast response aur genuine hospitality ke sath {$tagsStr} mila.",
-                    "Pricing ke hisaab se {$tagsStr} totally worth it laga.",
-                    "{$tagPrimary} itna smooth tha ki koi complaint ki gunjaish nahi thi.",
+                    "Pricing ke hisaab se {$tagsStr} totally paisa vasool laga.",
+                    "{$tagPrimary} itna accha tha ki koi complaint ki gunjaish nahi thi.",
                     "Staff bohot cooperative tha aur unhone {$tagsStr} ka pura khayal rakha.",
                     "Ambience aur {$tagsStr} ka combination bohot relaxing raha.",
                     "Quality consistency bohot acchi lagi, specially {$tagsStr}.",
-                    "Har cheez me professional touch dikha, aur {$tagsStr} out of the world tha.",
+                    "Har cheez me ekdum fresh feel thi, aur {$tagsStr} lajawaab tha.",
                 ],
                 'closers' => [
                     'Definitely recommend karunga sabko, must visit!',
@@ -408,7 +410,7 @@ PROMPT;
                     'Paisa vasool experience raha, 100% recommended.',
                     'Great job done by the management and team!',
                     'Rarely review karta hoon par yahan review likhna banta tha.',
-                    'Keep delivering this level of excellence!',
+                    'Next time bhi definitely yahi visit karenge!',
                 ],
             ];
         }
@@ -417,9 +419,9 @@ PROMPT;
         return [
             'openers' => [
                 "{$biz} me theek thaak experience raha.",
-                "Visited {$biz} recently, it was an average visit.",
+                "Visited {$biz} recently, average laga thoda.",
                 "{$biz} par theek experience mila but thoda better ho sakta tha.",
-                "Went to {$biz} today with high hopes.",
+                "Went to {$biz} today with good expectations.",
             ],
             'middles' => [
                 "{$tagsStr} theek tha, but scope of improvement hai.",
@@ -429,7 +431,7 @@ PROMPT;
             ],
             'closers' => [
                 'Hope agle visit me thoda improvement dekhne ko milega.',
-                'Decent place overall, needs a bit more attention to detail.',
+                'Decent place overall, needs a bit more attention.',
                 'Good effort, hope to see better execution next time.',
                 'Average experience, room for growth.',
             ],
@@ -446,33 +448,35 @@ PROMPT;
         if ($rating >= 4) {
             return [
                 'openers' => [
-                    "Had an outstanding experience at {$biz} today.",
-                    "Really impressed with the hospitality and service at {$biz}!",
-                    "Visited {$biz} recently and was thoroughly pleased.",
-                    "Such a refreshing and delightful visit to {$biz}.",
+                    "Had such a great experience visiting {$biz} today.",
+                    "Really impressed with the friendliness and service at {$biz}!",
+                    "Visited {$biz} recently and was genuinely pleased.",
+                    "Such a refreshing and wonderful visit to {$biz}.",
                     "Five stars well deserved for the entire team at {$biz}.",
-                    "{$biz} exceeded our expectations in every single department.",
-                    "If you are looking for top-tier quality, {$biz} is the place to be.",
-                    "From the moment we walked into {$biz}, everything was seamless.",
-                    "A truly 5-star experience at {$biz} that made our day.",
-                    "I cannot say enough good things about {$biz}!",
-                    "Visited {$biz} after hearing great reviews, and it was worth it.",
-                    "{$biz} sets the benchmark for quality and customer care.",
-                    "Such a welcoming and professional atmosphere at {$biz}.",
+                    "{$biz} was way better than I expected, absolutely loved it.",
+                    "If you are looking for great quality in this area, {$biz} is the place to go.",
+                    "From the moment we walked into {$biz}, everything was super smooth.",
+                    "A complete 5-star experience at {$biz} that made my day.",
+                    "I don't usually write reviews, but {$biz} definitely earned this one.",
+                    "Visited {$biz} after hearing good things, and it was totally worth it.",
+                    "Such a welcoming and comfortable atmosphere at {$biz}.",
                     "Delighted to have visited {$biz} today.",
-                    "Quality, hygiene, and warmth define the experience at {$biz}.",
+                    "Came to {$biz} with friends and we all had a wonderful time.",
+                    "Easily one of my favorite spots now — {$biz} is awesome.",
                 ],
                 'middles' => [
-                    "The {$tagsStr} was spot on and handled with great expertise.",
-                    "Everything from the {$tagsStr} was completely top notch.",
+                    "The {$tagsStr} was spot on and done so well.",
+                    "Everything from the {$tagsStr} to the overall vibe was top notch.",
                     "Special shoutout for the {$tagsStr} — truly made our visit memorable.",
-                    "Loved the acute attention to detail, especially regarding {$tagsStr}.",
-                    "The staff was courteous, polite, and took care of {$tagsStr} effortlessly.",
-                    "Prompt service combined with high-grade {$tagsStr} was a treat.",
-                    "The consistency in their {$tagsStr} is honestly commendable.",
-                    "We particularly appreciated how thoughtfully {$tagsStr} was delivered.",
-                    "Both the ambience and the {$tagsStr} were absolutely world-class.",
+                    "Loved how attentive the staff was, especially regarding {$tagsStr}.",
+                    "The staff was super friendly, welcoming, and took care of {$tagsStr} effortlessly.",
+                    "Prompt service combined with high-quality {$tagsStr} was a treat.",
+                    "The consistency in their {$tagsStr} is honestly so good.",
+                    "We particularly appreciated how nicely {$tagsStr} was delivered.",
+                    "Both the setup and the {$tagsStr} were absolutely fantastic.",
                     "Fast turnaround and excellent execution around {$tagsStr}.",
+                    "Everything arrived fresh and fast, especially the {$tagsStr}.",
+                    "No delays at all and the {$tagsStr} was totally on point.",
                 ],
                 'closers' => [
                     'Will definitely be coming back very soon!',
@@ -482,20 +486,22 @@ PROMPT;
                     'A complete 10/10 experience, keep up the fantastic work!',
                     'Easily one of the best spots around town.',
                     'Thank you to the whole staff for such a lovely time.',
-                    'Worth every penny, do not hesitate to check them out!',
+                    'Total value for money, do not hesitate to check them out!',
+                    'Definitely deserving of a solid 5 stars.',
+                    'So glad we decided to visit today!',
                 ],
             ];
         }
 
         return [
             'openers' => [
-                "Visited {$biz} earlier today for an appointment.",
+                "Visited {$biz} earlier today.",
                 "Had an average experience visiting {$biz}.",
                 "Decent visit to {$biz}, though with some mixed feelings.",
             ],
             'middles' => [
                 "The {$tagsStr} was acceptable, but there is noticeable room to improve.",
-                "Staff was helpful, however the {$tagsStr} felt a bit rushed.",
+                "Staff was polite, however the {$tagsStr} felt a bit delayed.",
                 "A satisfactory visit, but {$tagsStr} could certainly be better.",
             ],
             'closers' => [

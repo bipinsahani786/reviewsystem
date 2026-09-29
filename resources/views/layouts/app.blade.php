@@ -252,46 +252,51 @@
                                 💰 My Payouts
                             </a>
                         </div>
+                    @elseif(Auth::user()?->isSuperAdmin())
+                        {{-- Super Admin Lifetime Platform Owner Badge --}}
+                        <div class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white shadow-2xs">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span>Super Admin · Master Control</span>
+                        </div>
                     @else
-                        {{-- Subscription / Trial Days Remaining Badge (Header) --}}
+                        {{-- Subscription / Trial Days Remaining Badge (Header for Client Merchants) --}}
                         @php
                             $headerUser = Auth::user();
                             $headerBiz = $headerUser ? $headerUser->businesses()->with('plan')->first() : null;
                         @endphp
 
-                    @if($headerBiz)
-                        @if($headerBiz->isOnTrial())
-                            <a href="{{ route('admin.billing.index') }}" 
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200/90 hover:bg-amber-100 transition shadow-2xs" 
-                               title="Trial ends on {{ $headerBiz->trial_ends_at?->format('M d, Y') }}">
-                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                <span>🎁 {{ $headerBiz->trialDaysRemaining() }} Days Trial Left</span>
-                                <span class="hidden sm:inline-block text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded-md ml-0.5">Upgrade</span>
-                            </a>
-                        @elseif($headerBiz->hasActiveSubscription())
-                            @php
-                                $daysLeft = $headerBiz->subscriptionDaysRemaining();
-                            @endphp
-                            <a href="{{ route('admin.billing.index') }}" 
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200/90 hover:bg-emerald-100 transition shadow-2xs"
-                               title="Active plan: {{ $headerBiz->plan?->name }} (Valid until {{ $headerBiz->subscription_ends_at?->format('M d, Y') }})">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span>⚡ {{ $daysLeft }} Days Left</span>
-                                <span class="hidden sm:inline-block text-[10px] font-extrabold text-emerald-800 bg-emerald-200/80 px-1.5 py-0.5 rounded-md ml-0.5">
-                                    {{ $headerBiz->plan?->name ?? 'Active' }}
-                                </span>
-                            </a>
-                        @elseif($headerBiz->isExpired())
-                            <a href="{{ route('admin.billing.index') }}" 
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-900 border border-rose-300 hover:bg-rose-100 transition shadow-2xs">
-                                <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
-                                <span>⚠️ Plan Expired</span>
-                                <span class="hidden sm:inline-block text-[10px] font-extrabold text-white bg-rose-600 px-1.5 py-0.5 rounded-md ml-0.5">Renew</span>
-                            </a>
-                        @endif
+                        @if($headerBiz)
+                            @if($headerBiz->isOnTrial())
+                                <a href="{{ route('admin.billing.index') }}" 
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200/90 hover:bg-amber-100 transition shadow-2xs" 
+                                   title="Trial ends on {{ $headerBiz->trial_ends_at?->format('M d, Y') }}">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span>🎁 {{ $headerBiz->trialDaysRemaining() }} Days Trial Left</span>
+                                    <span class="hidden sm:inline-block text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded-md ml-0.5">Upgrade</span>
+                                </a>
+                            @elseif($headerBiz->hasActiveSubscription())
+                                @php
+                                    $daysLeft = $headerBiz->subscriptionDaysRemaining();
+                                @endphp
+                                <a href="{{ route('admin.billing.index') }}" 
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200/90 hover:bg-emerald-100 transition shadow-2xs"
+                                   title="Active plan: {{ $headerBiz->plan?->name }} (Valid until {{ $headerBiz->subscription_ends_at?->format('M d, Y') }})">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span>⚡ {{ $daysLeft }} Days Left</span>
+                                    <span class="hidden sm:inline-block text-[10px] font-extrabold text-emerald-800 bg-emerald-200/80 px-1.5 py-0.5 rounded-md ml-0.5">
+                                        {{ $headerBiz->plan?->name ?? 'Active' }}
+                                    </span>
+                                </a>
+                            @elseif($headerBiz->isExpired())
+                                <a href="{{ route('admin.billing.index') }}" 
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-900 border border-rose-300 hover:bg-rose-100 transition shadow-2xs">
+                                    <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                                    <span>⚠️ Plan Expired</span>
+                                    <span class="hidden sm:inline-block text-[10px] font-extrabold text-white bg-rose-600 px-1.5 py-0.5 rounded-md ml-0.5">Renew</span>
+                                </a>
+                            @endif
 
-                        {{-- Outlet Quota Pill (non-superadmin only) --}}
-                        @if(!Auth::user()->isSuperAdmin())
+                            {{-- Outlet Quota Pill (non-superadmin only) --}}
                             @php
                                 $hUsed = Auth::user()->businesses()->count();
                                 $hMax  = Auth::user()->maxBusinessesAllowed();
@@ -304,7 +309,6 @@
                                 <span>{{ $hUsed }}/{{ $hMax }} Outlets</span>
                             </a>
                         @endif
-                    @endif
                     @endif
 
                     {{-- White-Hat Compliance Pill --}}

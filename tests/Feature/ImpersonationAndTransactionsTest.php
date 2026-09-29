@@ -137,6 +137,8 @@ test('merchants can complete payment, activate subscription, and generate offici
     $invoiceResponse->assertSee($transaction->invoice_number);
     $invoiceResponse->assertSee($business->name);
     $invoiceResponse->assertSee('PAID INVOICE');
+    $invoiceResponse->assertDontSee('GSTIN');
+    $invoiceResponse->assertDontSee('GST / Taxes');
 });
 
 test('unauthorized users cannot view another customer invoice', function () {

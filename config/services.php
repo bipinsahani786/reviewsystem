@@ -44,6 +44,7 @@ return [
         'key' => env('RAZORPAY_KEY'),
         'secret' => env('RAZORPAY_SECRET'),
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+        'verify_ssl' => env('RAZORPAY_VERIFY_SSL', true),
     ],
 
 ];

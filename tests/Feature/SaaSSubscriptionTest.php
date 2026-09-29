@@ -1,9 +1,14 @@
 <?php
 
+use App\Models\AgentSale;
 use App\Models\Business;
 use App\Models\Plan;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 
 test('super admin can create, update, and manage plans with custom trial days and duration', function () {
     $superAdmin = User::factory()->create(['is_super_admin' => true]);
@@ -346,4 +351,265 @@ test('navigation header displays days remaining pill for trial and active subscr
     $response2 = $this->actingAs($client)->get(route('admin.dashboard'));
     $response2->assertStatus(200);
     $response2->assertSee('25 Days Left');
+});
+
+test('upgrade auto-provisions a business and succeeds when user has zero businesses', function () {
+    $client = User::factory()->create(['is_super_admin' => false]);
+    expect($client->businesses()->count())->toBe(0);
+
+    $plan = Plan::create([
+        'name' => 'Auto Provision Test Plan',
+        'slug' => 'auto-provision-test',
+        'price' => 999,
+        'yearly_price' => 9999,
+        'currency' => '₹',
+        'billing_cycle' => '/ month',
+        'billing_period' => 'monthly',
+        'trial_days' => 14,
+        'is_active' => true,
+    ]);
+
+    // User submits upgrade without passing business_id
+    $response = $this->actingAs($client)->postJson(route('admin.billing.upgrade'), [
+        'plan_id' => $plan->id,
+        'billing_cycle' => 'monthly',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+    expect($data['success'])->toBeTrue();
+    // A business must have been automatically provisioned for this user
+    expect($client->businesses()->count())->toBe(1);
+    $createdBiz = $client->businesses()->first();
+    expect($createdBiz)->not->toBeNull();
+    expect($data['business_name'])->toBe($createdBiz->name);
+});
+
+test('razorpay order creation automatically recovers from cURL SSL error 60 without failing', function () {
+    Config::set('services.razorpay.key', 'rzp_test_mock_key');
+    Config::set('services.razorpay.secret', 'mock_secret_123');
+
+    $client = User::factory()->create();
+    $business = Business::create([
+        'name' => 'SSL Cafe',
+        'slug' => 'ssl-cafe',
+        'google_place_id' => 'ChIJ_SSL_Cafe',
+        'owner_user_id' => $client->id,
+        'subscription_status' => 'trial',
+        'trial_ends_at' => now()->addDays(10),
+        'is_active' => true,
+    ]);
+
+    $plan = Plan::create([
+        'name' => 'SSL Recovery Plan',
+        'slug' => 'ssl-recovery-plan',
+        'price' => 1499,
+        'currency' => '₹',
+        'billing_cycle' => '/ month',
+        'billing_period' => 'monthly',
+        'trial_days' => 14,
+        'is_active' => true,
+    ]);
+
+    $attemptCount = 0;
+    Http::fake(function (Request $request) use (&$attemptCount) {
+        $attemptCount++;
+        // First attempt simulates cURL error 60 (SSL certificate problem)
+        if ($attemptCount === 1) {
+            throw new ConnectionException('cURL error 60: SSL certificate problem: self-signed certificate in certificate chain for https://api.razorpay.com/v1/orders');
+        }
+
+        // Retry attempt without verifying succeeds
+        return Http::response([
+            'id' => 'order_ssl_recovered_999',
+            'amount' => 149900,
+            'currency' => 'INR',
+            'status' => 'created',
+        ], 200);
+    });
+
+    $response = $this->actingAs($client)->postJson(route('admin.billing.upgrade'), [
+        'business_id' => $business->id,
+        'plan_id' => $plan->id,
+        'billing_cycle' => 'monthly',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+    expect($data['success'])->toBeTrue();
+    expect($data['order_id'])->toBe('order_ssl_recovered_999');
+    expect($attemptCount)->toBe(2);
+});
+
+test('razorpay webhook captures payment, activates subscription, generates invoice, and records agent commission', function () {
+    $secret = 'webhook_secret_abc123';
+    Config::set('services.razorpay.webhook_secret', $secret);
+
+    $agent = User::factory()->create([
+        'is_agent' => true,
+        'commission_rate' => 20.00,
+    ]);
+
+    $merchant = User::factory()->create([
+        'agent_id' => $agent->id,
+    ]);
+
+    $business = Business::create([
+        'name' => 'Agent Referred Spa',
+        'slug' => 'agent-referred-spa',
+        'google_place_id' => 'ChIJ_Spa_Wh',
+        'owner_user_id' => $merchant->id,
+        'subscription_status' => 'trial',
+        'trial_ends_at' => now()->addDays(5),
+        'is_active' => true,
+    ]);
+
+    $plan = Plan::create([
+        'name' => 'Webhook Test Plan',
+        'slug' => 'webhook-test-plan',
+        'price' => 2000,
+        'yearly_price' => 20000,
+        'currency' => '₹',
+        'billing_cycle' => '/ month',
+        'billing_period' => 'monthly',
+        'trial_days' => 14,
+        'is_active' => true,
+    ]);
+
+    $payload = json_encode([
+        'event' => 'payment.captured',
+        'payload' => [
+            'payment' => [
+                'entity' => [
+                    'id' => 'pay_wh_live_12345',
+                    'order_id' => 'order_wh_live_98765',
+                    'amount' => 200000,
+                    'notes' => [
+                        'business_id' => (string) $business->id,
+                        'plan_id' => (string) $plan->id,
+                        'billing_cycle' => 'monthly',
+                    ],
+                ],
+            ],
+        ],
+    ]);
+
+    $signature = hash_hmac('sha256', $payload, $secret);
+
+    $response = $this->call('POST', route('razorpay.webhook'), [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_RAZORPAY_SIGNATURE' => $signature,
+    ], $payload);
+
+    $response->assertStatus(200);
+    $response->assertJson(['status' => 'ok']);
+
+    $business->refresh();
+    expect($business->subscription_status)->toBe('active');
+    expect($business->plan_id)->toBe($plan->id);
+    expect($business->razorpay_payment_id)->toBe('pay_wh_live_12345');
+
+    // Transaction & Invoice created
+    $transaction = Transaction::where('razorpay_payment_id', 'pay_wh_live_12345')->first();
+    expect($transaction)->not->toBeNull();
+    expect($transaction->amount)->toEqual('2000.00');
+
+    // Agent Commission created
+    $commission = AgentSale::where('merchant_id', $merchant->id)->first();
+    expect($commission)->not->toBeNull();
+    expect($commission->commission_amount)->toEqual('400.00'); // 20% of 2000
+    expect($commission->agent_id)->toBe($agent->id);
+});
+
+test('razorpay webhook handles order.paid event and syncs multiple outlets', function () {
+    $secret = 'webhook_order_paid_secret';
+    Config::set('services.razorpay.webhook_secret', $secret);
+
+    $merchant = User::factory()->create();
+
+    $outlet1 = Business::create([
+        'name' => 'Outlet One',
+        'slug' => 'outlet-one-wh',
+        'google_place_id' => 'ChIJ_Outlet_1',
+        'owner_user_id' => $merchant->id,
+        'subscription_status' => 'trial',
+        'trial_ends_at' => now()->addDays(2),
+        'is_active' => true,
+    ]);
+
+    $outlet2 = Business::create([
+        'name' => 'Outlet Two',
+        'slug' => 'outlet-two-wh',
+        'google_place_id' => 'ChIJ_Outlet_2',
+        'owner_user_id' => $merchant->id,
+        'subscription_status' => 'trial',
+        'trial_ends_at' => now()->addDays(2),
+        'is_active' => true,
+    ]);
+
+    $plan = Plan::create([
+        'name' => 'Multi Outlet Yearly Plan',
+        'slug' => 'multi-outlet-yearly',
+        'price' => 5000,
+        'yearly_price' => 50000,
+        'currency' => '₹',
+        'billing_cycle' => '/ year',
+        'billing_period' => 'yearly',
+        'trial_days' => 14,
+        'is_active' => true,
+    ]);
+
+    $payload = json_encode([
+        'event' => 'order.paid',
+        'payload' => [
+            'order' => [
+                'entity' => [
+                    'id' => 'order_paid_777',
+                    'amount_paid' => 5000000,
+                    'notes' => [
+                        'business_id' => (string) $outlet1->id,
+                        'plan_id' => (string) $plan->id,
+                        'billing_cycle' => 'yearly',
+                    ],
+                ],
+            ],
+            'payment' => [
+                'entity' => [
+                    'id' => 'pay_order_paid_888',
+                    'order_id' => 'order_paid_777',
+                ],
+            ],
+        ],
+    ]);
+
+    $signature = hash_hmac('sha256', $payload, $secret);
+
+    $response = $this->call('POST', route('razorpay.webhook'), [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_RAZORPAY_SIGNATURE' => $signature,
+    ], $payload);
+
+    $response->assertStatus(200);
+
+    $outlet1->refresh();
+    $outlet2->refresh();
+
+    expect($outlet1->subscription_status)->toBe('active');
+    expect($outlet1->billing_cycle)->toBe('yearly');
+    expect($outlet2->subscription_status)->toBe('active');
+    expect($outlet2->billing_cycle)->toBe('yearly');
+});
+
+test('razorpay webhook rejects invalid signature with 400', function () {
+    Config::set('services.razorpay.webhook_secret', 'correct_secret');
+
+    $payload = json_encode(['event' => 'payment.captured']);
+
+    $response = $this->call('POST', route('razorpay.webhook'), [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_RAZORPAY_SIGNATURE' => 'invalid_tampered_signature',
+    ], $payload);
+
+    $response->assertStatus(400);
+    $response->assertJson(['status' => 'invalid_signature']);
 });

@@ -70,9 +70,8 @@
                         </div>
                     @endif
                     <div class="text-xs text-slate-500 space-y-0.5">
-                        <p class="font-semibold text-slate-700">{{ $siteBrandName }} Technologies Pvt Ltd</p>
+                        <p class="font-semibold text-slate-700">{{ $siteBrandName }}</p>
                         <p>Support: {{ $supportEmail ?? 'support@' . (parse_url(config('app.url'), PHP_URL_HOST) ?: 'reviewbooster.local') }}</p>
-                        <p>GSTIN / Tax ID: 07AAAAA0000A1Z5 (Exempt/SaaS)</p>
                     </div>
                 </div>
 
@@ -159,10 +158,6 @@
                         <span>Subtotal:</span>
                         <span class="font-bold text-slate-800">{{ $transaction->formatted_amount }}</span>
                     </div>
-                    <div class="flex justify-between text-slate-600">
-                        <span>GST / Taxes:</span>
-                        <span class="font-bold text-emerald-600">Inclusive</span>
-                    </div>
                     <div class="border-t border-slate-200 pt-2 flex justify-between text-sm font-black text-slate-900">
                         <span>Total Paid:</span>
                         <span class="text-emerald-700 font-black text-base">{{ $transaction->formatted_amount }}</span>
@@ -173,7 +168,7 @@
             {{-- Footer / Terms --}}
             <div class="border-t border-slate-100 pt-8 text-[11px] text-slate-400 text-center space-y-1">
                 <p class="font-bold text-slate-500">Thank you for powering your Google business reviews with {{ $siteBrandName }}!</p>
-                <p>This is a computer-generated tax invoice. No physical signature is required.</p>
+                <p>This is a computer-generated invoice. No physical signature is required.</p>
                 <p>Need support or custom invoice updates? Contact support at {{ $supportEmail ?? 'support@' . (parse_url(config('app.url'), PHP_URL_HOST) ?: 'reviewbooster.local') }}</p>
             </div>
 

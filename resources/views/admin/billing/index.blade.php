@@ -39,6 +39,31 @@
                 </div>
             @endif
 
+            @if(isset($businesses) && $businesses->count() > 1)
+                <!-- Multi-Outlet Switcher -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base shadow-xs">
+                            🏢
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-black text-slate-900">Managing Business Location:</h4>
+                            <p class="text-[11px] text-slate-500 font-medium">Select which outlet to view subscription status and invoices for</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select onchange="window.location.href='{{ route('admin.billing.index') }}?business_id=' + this.value" 
+                                class="text-xs font-bold rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 py-2 px-3 bg-slate-50 text-slate-800 shadow-2xs">
+                            @foreach($businesses as $b)
+                                <option value="{{ $b->id }}" {{ $business && $business->id == $b->id ? 'selected' : '' }}>
+                                    {{ $b->name }} ({{ $b->subscription_status == 'active' ? 'Active' : ($b->isOnTrial() ? 'Trial' : 'Expired') }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            @endif
+
             @if($business)
                 <!-- Current Subscription Status Card -->
                 <div class="bg-white rounded-3xl border border-slate-100 p-6 md:p-8 shadow-sm">
@@ -250,7 +275,7 @@
                 <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900">Billing History &amp; Official Invoices</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Download or print GST-compliant tax invoices for your subscription payments</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Download or print official payment invoices for your subscription records</p>
                     </div>
                     <span class="text-xs font-bold text-slate-400">{{ count($transactions) }} Records</span>
                 </div>
@@ -484,9 +509,21 @@
 
                 initiateRazorpayCheckout() {
                     if (!this.selectedPlanId) {
-                        alert('Error: Please select a plan.');
+                        alert('Please select a subscription plan first.');
                         return;
                     }
+
+                    if (!this.businessId) {
+                        @if($business)
+                            this.businessId = {{ $business->id }};
+                        @endif
+                    }
+
+                    if (!this.businessId) {
+                        alert('No business location found. Please create a business outlet first before upgrading.');
+                        return;
+                    }
+
                     this.isProcessing = true;
                     const cycle = this.selectedCycle;
                     const self = this;
@@ -540,12 +577,12 @@
                                             self.paymentSuccess = true;
                                             self.invoiceUrl = vData.invoice_url;
                                         } else {
-                                            alert('Payment verification failed: ' + vData.message);
+                                            alert('Payment verification failed: ' + (vData.message || 'Please contact support.'));
                                         }
                                     })
                                     .catch(err => {
                                         self.isProcessing = false;
-                                        alert('Verification request failed.');
+                                        alert('Verification request failed. If payment was deducted, it will be activated shortly via webhook.');
                                     });
                                 },
                                 "theme": {
@@ -555,13 +592,17 @@
                             const rzp = new Razorpay(options);
                             rzp.open();
                         } else {
-                            alert(data.message || 'Unable to start payment.');
+                            if (data.errors && data.errors.business_id) {
+                                alert('Please select a valid business outlet before initiating checkout.');
+                            } else {
+                                alert(data.message || 'Unable to start payment. Please check your connection or contact support.');
+                            }
                         }
                     })
                     .catch(err => {
                         self.isProcessing = false;
                         console.error(err);
-                        alert('An unexpected error occurred.');
+                        alert('An unexpected network error occurred.');
                     });
                 },
 
@@ -570,6 +611,13 @@
                         alert('Error: Please select a plan first.');
                         return;
                     }
+
+                    if (!this.businessId) {
+                        @if($business)
+                            this.businessId = {{ $business->id }};
+                        @endif
+                    }
+
                     this.isProcessing = true;
                     const cycle = this.selectedCycle;
                     const mockPaymentId = 'pay_sbx_' + Date.now();

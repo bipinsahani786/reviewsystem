@@ -93,6 +93,11 @@
                     <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         ⚡ {{ number_format($navUser->commission_rate, 0) }}% Comm.
                     </span>
+                @elseif($navUser?->isSuperAdmin())
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white shadow-2xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>Super Admin</span>
+                    </span>
                 @elseif($navBusiness)
                     @if($navBusiness->isOnTrial())
                         <a href="{{ route('admin.billing.index') }}" 
@@ -221,7 +226,7 @@
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
-            @if($navBusiness)
+            @if($navBusiness && ! $navUser?->isSuperAdmin())
                 <div class="px-4 mb-3">
                     @if($navBusiness->isOnTrial())
                         <a href="{{ route('admin.billing.index') }}" class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
